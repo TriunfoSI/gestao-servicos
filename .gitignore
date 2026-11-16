@@ -1,0 +1,8 @@
+# Dados reais nunca vão para o repositório (o repositório é público)
+*.sql.dados
+instalar_2_dados.sql
+10_dados.sql
+relatorio_importacao.md
+*.accdb
+*.mdb
+node_modules/

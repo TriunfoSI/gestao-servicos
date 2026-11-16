@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Acompanhamento do serviço</title>
+  <link rel="stylesheet" href="css/estilo.css">
+  <style>
+    .rel { max-width: 960px; margin: 0 auto; padding: 1.25rem; }
+    .rel-topo { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; border-bottom: 3px solid var(--marca); padding-bottom: .75rem; margin-bottom: 1rem; }
+    .rel-topo .marca { color: var(--marca); }
+    .rel-topo .marca .marca-icone { background: var(--marca); color: #fff; }
+    .rel h1 { margin: .25rem 0; }
+    .rodape { color: var(--suave); font-size: .82rem; text-align: center; margin: 2rem 0 1rem; }
+  </style>
+  <script src="vendor/supabase-2.118.0.js"></script>
+</head>
+<body>
+  <div class="rel" id="rel"><p class="carregando">Carregando relatório…</p></div>
+  <script type="module">
+    import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+    const raiz = document.getElementById('rel');
+
+    function h(tag, attrs, ...filhos) {
+      const el = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs || {})) if (v != null) k === 'class' ? el.className = v : k.startsWith('on') ? el.addEventListener(k.slice(2), v) : el.setAttribute(k, v);
+      for (const f of filhos.flat(Infinity)) if (f != null && f !== false && f !== '') el.append(f instanceof Node ? f : document.createTextNode(String(f)));
+      return el;
+    }
+    const data = (d) => d ? new Date(d.length === 10 ? d + 'T12:00:00' : d).toLocaleDateString('pt-BR') : '';
+    const reais = (v) => v == null ? '' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const COR = { 'Em andamento': 'azul', 'Ativo': 'azul', 'Em aberto': 'amarelo', 'Paralisado': 'laranja', 'Finalizado': 'verde', 'Encerrado': 'verde',
+      'Concluído': 'verde', 'Pago': 'verde', 'Não iniciado': 'cinza', 'Cancelado': 'cinza', 'Nota fiscal emitida': 'roxo', 'Pendência': 'laranja', 'Não atendido': 'cinza' };
+    const etq = (t) => t ? h('span', { class: 'etq ' + (COR[t] || 'cinza') }, t) : '';
+    const tabela = (cols, linhas, vazio) => !linhas.length ? h('p', { class: 'vazio' }, vazio) :
+      h('div', { class: 'tabela-rolagem' }, h('table', { class: 'tabela' }, h('thead', {}, h('tr', {}, cols.map(([r]) => h('th', {}, r)))),
+        h('tbody', {}, linhas.map((l) => h('tr', {}, cols.map(([r, f, c]) => h('td', { 'data-rotulo': r, class: c }, f(l))))))));
+    const secao = (t, ...c) => h('section', { class: 'secao' }, h('div', { class: 'secao-topo' }, h('h3', {}, t)), c);
+
+    async function iniciar() {
+      const token = new URLSearchParams(location.search).get('t');
+      if (!token) { raiz.replaceChildren(h('div', { class: 'alerta erro' }, 'Link incompleto. Confira o endereço recebido.')); return; }
+      const { data: r, error } = await sb.rpc('relatorio_cliente', { p_token: token });
+      if (error || !r || r.erro) { raiz.replaceChildren(h('div', { class: 'alerta erro' }, (r && r.erro) || 'Não foi possível carregar o relatório.')); return; }
+      const o = r.os;
+      document.title = `OS ${o.numero || ''} — acompanhamento`;
+      const totais = r.financeiro.reduce((a, p) => { a.t += Number(p.valor); if (p.situacao === 'Pago') a.p += Number(p.valor); return a; }, { t: 0, p: 0 });
+      raiz.replaceChildren(...[
+        h('div', { class: 'rel-topo' }, h('div', { class: 'marca' }, h('span', { class: 'marca-icone' }, 'OS'), h('span', {}, 'Acompanhamento do serviço')),
+          h('button', { class: 'btn pequeno', onclick: () => print() }, 'Imprimir / salvar PDF')),
+        h('p', { class: 'cliente-linha' }, o.cliente),
+        h('h1', {}, `OS ${o.numero || ''}`), h('p', { class: 'subtitulo' }, o.titulo),
+        h('div', { class: 'situacoes', style: 'margin:.75rem 0 1rem' },
+          h('div', {}, h('small', {}, 'Serviço técnico'), etq(o.sit_tecnica)),
+          h('div', {}, h('small', {}, 'Financeiro'), etq(o.sit_comercial)),
+          h('div', {}, h('small', {}, 'Contrato'), etq(o.sit_contrato)),
+          o.sit_tecnica_detalhe ? h('div', {}, h('small', {}, 'Detalhe'), o.sit_tecnica_detalhe) : null),
+        secao('Dados do serviço', h('dl', { class: 'detalhes' },
+          [['Proposta', o.proposta], ['Responsável técnico', o.responsavel], ['Aceite', data(o.data_aceite)], ['Prazo contratual', o.prazo_contratual],
+           ['Término', data(o.data_termino)], ['Local', o.local], ['Endereço', o.local_endereco], ['Município', [o.municipio, o.uf].filter(Boolean).join(' / ')],
+           ['Situação atualizada em', data(o.atualizado)]]
+            .filter(([, v]) => v).map(([k, v]) => [h('dt', {}, k), h('dd', {}, v)]))),
+        r.escopo.length ? secao('Escopo', h('ol', { class: 'escopo' }, r.escopo.map((e) => h('li', {}, h('strong', {}, e.servico || ''), e.descricao ? h('p', { class: 'pre' }, e.descricao) : null)))) : null,
+        secao('Cronograma', tabela([['Etapa', (p) => p.descricao, 'texto'], ['Tipo', (p) => p.tipo || ''], ['Início', (p) => data(p.inicio)], ['Previsão', (p) => data(p.termino)], ['Situação', (p) => etq(p.situacao)]], r.prazos, 'Nenhuma etapa cadastrada.')),
+        secao('Andamento', r.andamento.length ? h('ul', { class: 'linha-tempo' }, r.andamento.map((m) => h('li', {}, h('div', { class: 'lt-data' }, data(m.data)),
+          h('div', { class: 'lt-corpo' }, m.detalhe ? h('strong', {}, m.detalhe) : null, h('p', { class: 'pre' }, m.descricao))))) : h('p', { class: 'vazio' }, 'Nenhum registro de andamento divulgado ainda.')),
+        secao('Processos nos órgãos', tabela([['Órgão', (p) => p.instituicao || ''], ['Nº do processo', (p) => p.referencia || ''], ['Abertura', (p) => data(p.abertura)], ['Objetivo', (p) => p.objetivo || '', 'texto']], r.processos, 'Nenhum processo vinculado.')),
+        secao('Financeiro',
+          r.financeiro.length ? h('p', {}, `Total: ${reais(totais.t)} · Pago: ${reais(totais.p)} · A pagar: ${reais(totais.t - totais.p)}`) : null,
+          tabela([['Parcela', (p) => p.parcela || ''], ['Referência', (p) => p.referencia || '', 'texto'], ['Valor', (p) => reais(p.valor), 'num'], ['Previsão', (p) => data(p.prevista)], ['Pagamento', (p) => data(p.paga)], ['Situação', (p) => etq(p.situacao)]], r.financeiro, 'Nenhuma parcela cadastrada.')),
+        r.produtos.length ? secao('Produtos técnicos entregues', h('ul', {}, r.produtos.map((p) => h('li', {}, p.nome, ' — ', data(p.enviado_em))))) : null,
+        h('p', { class: 'rodape' }, `Relatório gerado em ${new Date().toLocaleString('pt-BR')}. Em caso de dúvidas, fale com o responsável técnico.`)].filter(Boolean));
+    }
+    iniciar();
+  </script>
+</body>
+</html>
