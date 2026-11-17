@@ -241,10 +241,16 @@ avisos["Prazos a atualizar"].append(
 # ---------------------------------------------------------------- andamento e tarefas
 MAP_SIT_TAREFA = {1: "Concluída", 2: "A fazer", 3: "Em andamento", 4: "A fazer", 5: "A fazer", 7: "A fazer", 9: "Cancelada"}
 movs, tarefas = [], []
+antigos = 0
 for r in tabela("MOVIMENTACAO"):
     os_id = num(r["CAD_OS"]) if num(r["CAD_OS"]) in ids_os else None
-    if num(r["MOVIMENTACAO_DETALHE"]) == 13:          # TAREFA | EQUIPE TÉCNICA -> tarefas
+    if (dt(r["MOVIMENTACAO_DATAInicio"]) or "9999") < "2026-11-10":   # pedido de 17/11/2026: descartar registros antigos
+        antigos += 1
+        continue
+    if num(r["MOVIMENTACAO_DETALHE"]) in (13, 15):    # TAREFA | EQUIPE TÉCNICA e PENDÊNCIA | PONTO DE ATENÇÃO -> tarefas
         obs = txt(r["MOVIMENTACAO_OBS"])
+        if num(r["MOVIMENTACAO_DETALHE"]) == 15:
+            obs = "\n".join(x for x in [obs, "Origem: Pendência | Ponto de atenção"] if x)
         sit_antiga = sit_mov.get(num(r["MOVIMENTACAO_SITUAÇÃO"]))
         tarefas.append({"id": num(r["CAD_MOVIMENTACAO"]), "os_id": os_id,
                         "descricao": txt(r["MOVIMENTACAO_DESCRICAO"]) or "(sem descrição)",
@@ -262,7 +268,8 @@ for r in tabela("MOVIMENTACAO"):
 inserir("movimentacao", movs, list(movs[0].keys()))
 inserir("tarefa", tarefas, list(tarefas[0].keys()))
 contagem["movimentacao"], contagem["tarefa"] = len(movs), len(tarefas)
-avisos["Andamento"].append(f"{len(tarefas)} registros do tipo \"TAREFA | EQUIPE TÉCNICA\" viraram Tarefas; "
+avisos["Andamento"].append(f"{antigos} registros anteriores a 10/11/2026 foram descartados. "
+                           f"{len(tarefas)} registros \"TAREFA | EQUIPE TÉCNICA\" e \"PENDÊNCIA | PONTO DE ATENÇÃO\" viraram Tarefas; "
                            f"os outros {len(movs)} ficaram no Andamento. Todos estão como \"Interna\" (não aparecem para o cliente).")
 avisos["Registros não importados"].append("1 registro de detalhamento de vistoria com foto (tabela MOVIMENTACA_DESCRICAO); a foto fica no Access/Dropbox")
 
