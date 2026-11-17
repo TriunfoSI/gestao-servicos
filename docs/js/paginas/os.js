@@ -4,6 +4,7 @@ import {
   eGestor, eFinanceiro, perfil,
 } from '../base.js';
 import { editarPrazo, colunasPrazo } from './prazos.js';
+import { editarAtividade, colunasCronograma } from './cronograma.js';
 import { editarTarefa, abrirTarefa } from './tarefas.js';
 import { abaFinanceiro } from './financeiro.js';
 
@@ -103,7 +104,7 @@ async function novaOS() {
 
 // ================================================================== detalhe da OS
 const ABAS = [
-  ['dados', 'Dados'], ['escopo', 'Escopo'], ['prazos', 'Prazos'], ['andamento', 'Andamento'], ['tarefas', 'Tarefas'],
+  ['dados', 'Dados'], ['escopo', 'Escopo'], ['cronograma', 'Cronograma'], ['prazos', 'Prazos'], ['andamento', 'Andamento'], ['tarefas', 'Tarefas'],
   ['financeiro', 'Financeiro', eFinanceiro], ['processos', 'Processos'], ['produtos', 'Produtos finais'],
   ['link', 'Link do cliente'], ['historico', 'Histórico'],
 ];
@@ -132,7 +133,7 @@ export async function paginaOS(el, id, aba = 'dados') {
       h('a', { href: `#/os/${id}/${k}`, class: k === aba ? 'ativa' : '' }, t))),
     corpo);
 
-  const funcoes = { dados: abaDados, escopo: abaEscopo, prazos: abaPrazos, andamento: abaAndamento, tarefas: abaTarefas,
+  const funcoes = { dados: abaDados, escopo: abaEscopo, cronograma: abaCronograma, prazos: abaPrazos, andamento: abaAndamento, tarefas: abaTarefas,
     financeiro: abaFinanceiro, processos: abaProcessos, produtos: abaProdutos, link: abaLink, historico: abaHistorico };
   await (funcoes[aba] || abaDados)(corpo, ctx);
 }
@@ -196,15 +197,29 @@ async function abaEscopo(el, { os, podeEditar }) {
       l.descricao ? h('p', { class: 'pre' }, l.descricao) : null))) : h('p', { class: 'vazio' }, 'Nenhum item de escopo cadastrado.')));
 }
 
+// ------------------------------------------------------------------ Cronograma
+async function abaCronograma(el, ctx) {
+  const { os, podeEditar } = ctx;
+  const linhas = await q(sb.from('v_cronograma').select('*').eq('os_id', os.id).order('data_inicio', { nullsFirst: false }).order('data_termino'));
+  const recarregar = () => abaCronograma(el, ctx);
+  limpar(el, secao('Cronograma',
+    podeEditar ? botao('Incluir atividade', () => editarAtividade(null, os.id, recarregar), 'primario') : null,
+    h('p', { class: 'ajuda' }, 'Atividades com período (início e término) para cumprir o escopo técnico desta OS.'),
+    tabela(colunasCronograma({ comOS: false }), linhas, {
+      aoClicar: (a) => (podeEditar || a.responsavel_id === st.eu.id) && editarAtividade(a, os.id, recarregar),
+      vazio: 'Nenhuma atividade no cronograma.' })));
+}
+
 // ------------------------------------------------------------------ Prazos
 async function abaPrazos(el, ctx) {
   const { os, podeEditar } = ctx;
   const linhas = await q(sb.from('v_prazo').select('*').eq('os_id', os.id).order('data_termino', { nullsFirst: false }));
   const recarregar = () => abaPrazos(el, ctx);
-  limpar(el, secao('Cronograma e prazos',
+  limpar(el, secao('Prazos',
     podeEditar ? botao('Incluir prazo', () => editarPrazo(null, os.id, recarregar), 'primario') : null,
+    h('p', { class: 'ajuda' }, 'Datas únicas: prazos de órgãos, comunique-se, entrega de produtos, vencimento do contrato.'),
     tabela(colunasPrazo({ comOS: false }), linhas, {
-      aoClicar: (p) => (podeEditar || p.responsavel_id === st.eu.id) && editarPrazo(p, os.id, recarregar),
+      aoClicar: podeEditar ? (p) => editarPrazo(p, os.id, recarregar) : null,
       vazio: 'Nenhum prazo cadastrado.' })));
 }
 

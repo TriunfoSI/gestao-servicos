@@ -1,13 +1,24 @@
-import { sb, st, h, limpar, q, aviso, tabela, etiqueta, fmtData, editarRegistro, opcoesEquipe, opcoesLista,
+import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, editarRegistro, opcoesEquipe, opcoesLista,
   somarDiasUteis, eGestor, perfil, botao } from '../base.js';
 
-export const SIT_PRAZO = ['Não iniciado', 'Em andamento', 'Concluído', 'Não atendido', 'Cancelado'];
-const ORIGENS = ['Planejamento', 'CETESB', 'MP | Ofício', 'MP', 'Prefeitura', 'CONDEPHAAT', 'Cliente', 'CTR-3'];
-const TIPOS = ['Cronograma', 'Protocolo', 'Produto técnico', 'Vencimento', 'Vistoria técnica', 'Reunião'];
+// Prazos são datas únicas (prazo de órgão, comunique-se, entrega de produto, vencimento de contrato...).
+// A situação é calculada pela data: A vencer ou Vencido.
+export const SIT_PRAZO = ['A vencer', 'Vencido'];
+const ORIGENS = ['CETESB', 'MP | Ofício', 'MP', 'Prefeitura', 'CONDEPHAAT', 'Cliente', 'CTR-3', 'Contrato', 'Planejamento'];
+const TIPOS = ['Prazo de órgão', 'Comunique-se', 'Entrega de produto', 'Vencimento de contrato', 'Protocolo',
+  'Produto técnico', 'Vencimento', 'Vistoria técnica', 'Reunião'];
 
-export function colunasPrazo({ comOS = true, acaoRapida } = {}) {
+const quando = (p) => {
+  if (p.dias_restantes == null) return '';
+  if (p.dias_restantes === 0) return 'hoje';
+  if (p.dias_restantes > 0) return p.dias_restantes === 1 ? 'amanhã' : `em ${p.dias_restantes} dias`;
+  return p.dias_restantes === -1 ? 'há 1 dia' : `há ${-p.dias_restantes} dias`;
+};
+
+export function colunasPrazo({ comOS = true } = {}) {
   return [
-    { rotulo: 'Vence', ord: (p) => p.data_termino, f: (p) => h('span', { class: p.alerta === 'Vencido' ? 'txt-vermelho' : '' }, fmtData(p.data_termino)) },
+    { rotulo: 'Data', ord: (p) => p.data_termino, f: (p) => h('span', { class: p.situacao === 'Vencido' ? 'txt-vermelho' : '' }, fmtData(p.data_termino)) },
+    { rotulo: 'Quando', ord: (p) => p.dias_restantes, f: quando },
     comOS && { rotulo: 'OS', ord: (p) => p.os_numero, f: (p) => h('a', { href: `#/os/${p.os_id}/prazos`, onclick: (e) => e.stopPropagation() }, p.os_numero || '—') },
     comOS && { rotulo: 'Cliente', k: 'cliente_curto' },
     { rotulo: 'Prazo', k: 'descricao', classe: 'texto' },
@@ -15,28 +26,23 @@ export function colunasPrazo({ comOS = true, acaoRapida } = {}) {
     { rotulo: 'Origem', k: 'origem' },
     { rotulo: 'Resp.', k: 'responsavel_iniciais' },
     { rotulo: 'Situação', k: 'situacao', f: (p) => etiqueta(p.situacao) },
-    { rotulo: 'Alerta', f: (p) => p.alerta !== 'Encerrado' ? etiqueta(p.alerta) : '' },
-    acaoRapida && { rotulo: '', f: (p) => p.alerta !== 'Encerrado' ? h('button', { class: 'btn pequeno', onclick: (e) => { e.stopPropagation(); acaoRapida(p); } }, 'Concluir') : '' },
   ].filter(Boolean);
 }
 
 export function editarPrazo(registro, osId, depois) {
-  const soSituacao = !!registro && !eGestor() && registro.os_responsavel_id !== st.eu.id;
   const campos = [
-    { k: 'descricao', rotulo: 'Descrição do prazo', obrig: true, largura: 2, desativado: soSituacao },
-    { k: 'tipo', rotulo: 'Tipo', sugestoes: TIPOS, desativado: soSituacao },
-    { k: 'origem', rotulo: 'Origem', sugestoes: ORIGENS, desativado: soSituacao },
-    { k: 'data_inicio', rotulo: 'Data de início / recebimento', tipo: 'data', desativado: soSituacao },
-    { k: 'qtd_dias', rotulo: 'Prazo em dias', tipo: 'numero', desativado: soSituacao },
-    { k: 'tipo_dia', rotulo: 'Contagem', tipo: 'opcoes', opcoes: [['úteis', 'Dias úteis'], ['corridos', 'Dias corridos']], numerico: false, desativado: soSituacao },
-    { k: 'data_termino', rotulo: 'Data final', tipo: 'data', ajuda: 'Calculada pela data de início + dias (pode ajustar).', desativado: soSituacao },
-    { k: 'situacao', rotulo: 'Situação', tipo: 'opcoes', opcoes: SIT_PRAZO, obrig: true, numerico: false, padrao: 'Não iniciado' },
-    { k: 'responsavel_id', rotulo: 'Responsável', tipo: 'opcoes', opcoes: opcoesEquipe, desativado: soSituacao },
-    { k: 'periodo_id', rotulo: 'Período (bloco)', tipo: 'opcoes', opcoes: () => opcoesLista('periodo'), desativado: soSituacao },
-    { k: 'referencia', rotulo: 'Referência', desativado: soSituacao },
+    { k: 'descricao', rotulo: 'Descrição do prazo', obrig: true, largura: 2 },
+    { k: 'tipo', rotulo: 'Tipo', sugestoes: TIPOS, ajuda: 'Escolha da lista ou escreva outro.' },
+    { k: 'origem', rotulo: 'Origem', sugestoes: ORIGENS },
+    { k: 'data_inicio', rotulo: 'Data de recebimento (opcional)', tipo: 'data', ajuda: 'Use junto com o prazo em dias para calcular a data.' },
+    { k: 'qtd_dias', rotulo: 'Prazo em dias', tipo: 'numero' },
+    { k: 'tipo_dia', rotulo: 'Contagem', tipo: 'opcoes', opcoes: [['úteis', 'Dias úteis'], ['corridos', 'Dias corridos']], numerico: false },
+    { k: 'data_termino', rotulo: 'Data do prazo', tipo: 'data', obrig: true, ajuda: 'Calculada pela data de recebimento + dias (pode ajustar).' },
+    { k: 'responsavel_id', rotulo: 'Responsável', tipo: 'opcoes', opcoes: opcoesEquipe },
+    { k: 'referencia', rotulo: 'Referência', ajuda: 'Nº do ofício, comunique-se, processo...' },
   ];
   const form = editarRegistro({ titulo: 'prazo', tabela: 'prazo', registro, extras: registro ? {} : { os_id: osId }, campos, depois,
-    podeExcluir: !soSituacao });
+    podeExcluir: true });
   const c = form.ctrls;
   const calcular = () => {
     const d = somarDiasUteis(c.data_inicio.value, Number(c.qtd_dias.value), c.tipo_dia.value !== 'corridos');
@@ -50,35 +56,29 @@ export async function paginaPrazos(el) {
   const resp = h('select', {}, h('option', { value: '' }, 'Todos os responsáveis'), opcoesEquipe().map(([v, t]) => h('option', { value: v }, t)));
   if (tecnico) resp.value = st.eu.id;
   const tipo = h('select', {}, h('option', { value: '' }, 'Todos os tipos'), TIPOS.map((t) => h('option', {}, t)));
-  const encerrados = h('input', { type: 'checkbox' });
+  const sit = h('select', {}, h('option', { value: '' }, 'A vencer e vencidos'), SIT_PRAZO.map((s) => h('option', {}, s)));
   const area = h('div');
 
   async function carregar() {
     let consulta = sb.from('v_prazo').select('*').order('data_termino', { nullsFirst: false });
     if (resp.value) consulta = consulta.eq('responsavel_id', resp.value);
     if (tipo.value) consulta = consulta.eq('tipo', tipo.value);
-    if (!encerrados.checked) consulta = consulta.neq('alerta', 'Encerrado');
+    if (sit.value) consulta = consulta.eq('situacao', sit.value);
     const linhas = await q(consulta);
-    const grupos = ['Vencido', 'Próximos 7 dias', 'Próximos 30 dias', 'Mais adiante', 'Sem data', 'Encerrado'];
-    const concluir = async (p) => {
-      await q(sb.from('prazo').update({ situacao: 'Concluído' }).eq('id', p.id));
-      aviso('Prazo concluído.'); carregar();
-    };
-    limpar(area, grupos.map((g) => {
-      let ls = linhas.filter((p) => p.alerta === g);
-      if (g === 'Vencido') ls = ls.reverse();
-      if (!ls.length) return null;
-      return h('section', { class: 'secao' }, h('div', { class: 'secao-topo' }, h('h3', {}, g, ' ', h('span', { class: 'contador' }, ls.length))),
-        tabela(colunasPrazo({ acaoRapida: concluir }), ls, { aoClicar: (p) => editarPrazo(p, p.os_id, carregar) }));
-    }).filter(Boolean));
+    const grupos = [
+      ['A vencer', linhas.filter((p) => p.situacao === 'A vencer')],
+      ['Vencido', linhas.filter((p) => p.situacao === 'Vencido').reverse()],
+      ['Sem data', linhas.filter((p) => p.situacao === 'Sem data')],
+    ];
+    limpar(area, grupos.filter(([, ls]) => ls.length).map(([g, ls]) =>
+      h('section', { class: 'secao' }, h('div', { class: 'secao-topo' }, h('h3', {}, g === 'Vencido' ? 'Vencidos' : g, ' ', h('span', { class: 'contador' }, ls.length))),
+        tabela(colunasPrazo(), ls, { aoClicar: (p) => (eGestor() || p.os_responsavel_id === st.eu.id) && editarPrazo(p, p.os_id, carregar) }))));
     if (!area.children.length) limpar(area, h('p', { class: 'vazio' }, 'Nenhum prazo com estes filtros.'));
   }
-  [resp, tipo, encerrados].forEach((x) => x.addEventListener('change', carregar));
+  [resp, tipo, sit].forEach((x) => x.addEventListener('change', carregar));
 
   limpar(el, h('div', { class: 'titulo-pagina' }, h('h1', {}, 'Prazos')),
-    h('p', { class: 'ajuda' }, 'Os prazos aparecem como vencidos enquanto não forem marcados como Concluído, Não atendido ou Cancelado.'),
-    h('div', { class: 'filtros' }, resp, tipo, h('label', { class: 'marcar' }, encerrados, ' Mostrar encerrados')), area);
+    h('p', { class: 'ajuda' }, 'Datas únicas a cumprir: prazos de órgãos, comunique-se, entrega de produtos, vencimento de contrato. A situação é automática: "A vencer" até a data e "Vencido" depois dela. As atividades com período ficam no ', h('a', { href: '#/cronograma' }, 'Cronograma'), '.'),
+    h('div', { class: 'filtros' }, resp, tipo, sit), area);
   await carregar();
 }
-
-export { botao };

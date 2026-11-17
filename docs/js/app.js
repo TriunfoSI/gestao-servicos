@@ -3,6 +3,7 @@ import { sb, st, h, limpar, aviso, traduzErro, carregarListas, NOME_PERFIL, eGes
 import { paginaPainel } from './paginas/painel.js';
 import { paginaListaOS, paginaOS } from './paginas/os.js';
 import { paginaPrazos } from './paginas/prazos.js';
+import { paginaCronograma } from './paginas/cronograma.js';
 import { paginaTarefas } from './paginas/tarefas.js';
 import { paginaFinanceiro } from './paginas/financeiro.js';
 import { paginaClientes, paginaCliente } from './paginas/clientes.js';
@@ -14,6 +15,7 @@ const ROTAS = [
   [/^#?\/?$/, paginaPainel],
   [/^#\/os$/, paginaListaOS],
   [/^#\/os\/(\d+)(?:\/(\w+))?$/, paginaOS],
+  [/^#\/cronograma$/, paginaCronograma],
   [/^#\/prazos$/, paginaPrazos],
   [/^#\/tarefas$/, paginaTarefas],
   [/^#\/financeiro$/, paginaFinanceiro, eFinanceiro],
@@ -24,7 +26,7 @@ const ROTAS = [
 
 function menu() {
   const itens = [
-    ['#/', 'Início'], ['#/os', 'Ordens de serviço'], ['#/prazos', 'Prazos'], ['#/tarefas', 'Tarefas'],
+    ['#/', 'Início'], ['#/os', 'Ordens de serviço'], ['#/cronograma', 'Cronograma'], ['#/prazos', 'Prazos'], ['#/tarefas', 'Tarefas'],
     eFinanceiro() && ['#/financeiro', 'Financeiro'], ['#/clientes', 'Clientes'], eGestor() && ['#/cadastros', 'Cadastros'],
   ].filter(Boolean);
   const nav = h('nav', { class: 'menu', id: 'menu' }, itens.map(([href, txt]) => h('a', { href }, txt)));

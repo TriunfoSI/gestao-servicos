@@ -55,7 +55,7 @@ const CORES = {
   'Cancelado': 'cinza', 'Cancelada': 'cinza', 'Não atendido': 'cinza',
   'Vencido': 'vermelho', 'Atrasada': 'vermelho', 'Próximos 7 dias': 'laranja', 'Próximos 30 dias': 'amarelo',
   'Mais adiante': 'cinza', 'Sem data': 'cinza', 'A vencer': 'amarelo', 'Interna': 'cinza', 'Geral': 'azul',
-  'Previsto': 'amarelo', 'Alta': 'vermelho', 'Média': 'amarelo', 'Baixa': 'cinza',
+  'Previsto': 'amarelo', 'Não iniciada': 'cinza', 'Alta': 'vermelho', 'Média': 'amarelo', 'Baixa': 'cinza',
 };
 export const etiqueta = (txt, extra) => txt ? h('span', { class: `etq ${CORES[txt] || 'cinza'} ${extra || ''}` }, txt) : '';
 

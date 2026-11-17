@@ -83,6 +83,10 @@ a.cartao:hover { border-color: #b9c4bf; }
 .recolhivel[open] summary { margin-bottom: .6rem; }
 .duas-colunas { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1rem; align-items: start; }
 .tabela-rolagem { overflow-x: auto; }
+.duas-colunas.iguais { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.duas-colunas > * { min-width: 0; }
+.caixa-rolagem { max-height: 28rem; overflow-y: auto; }
+.secao-topo h3 small { font-weight: 400; color: var(--suave); }
 .tabela { width: 100%; border-collapse: collapse; font-size: .9rem; }
 .tabela th { text-align: left; font-size: .78rem; text-transform: uppercase; letter-spacing: .02em; color: var(--suave); padding: .5rem .6rem; border-bottom: 2px solid var(--linha); white-space: nowrap; }
 .tabela td { padding: .55rem .6rem; border-bottom: 1px solid var(--linha); vertical-align: top; }
@@ -163,7 +167,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
 .login-links { display: flex; justify-content: space-between; gap: .5rem; font-size: .88rem; flex-wrap: wrap; }
 
 @media (max-width: 900px) {
-  .duas-colunas { grid-template-columns: 1fr; }
+  .duas-colunas, .duas-colunas.iguais { grid-template-columns: 1fr; }
   .menu-botao { display: block; margin-left: auto; }
   .menu { display: none; flex-basis: 100%; flex-direction: column; padding-bottom: .5rem; }
   .menu.aberto { display: flex; }
@@ -188,3 +192,4 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
   body { background: #fff; }
   .secao { box-shadow: none; break-inside: avoid; }
 }
+.nowrap { white-space: nowrap; }

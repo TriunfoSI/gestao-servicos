@@ -211,32 +211,49 @@ MAP_TIPO = {"CRONOGRAMA": "Cronograma", "PROTOCOLO": "Protocolo", "PRODUTO TÉCN
             "VENCIMENTO": "Vencimento", "VISTORIA TÉCNICA": "Vistoria técnica"}
 MAP_SIT_PRAZO = {"NÃO INICIADO": "Não iniciado", "NÃO INICIADA": "Não iniciado", "EM ANDAMENTO": "Em andamento",
                  "CONCLUÍDO": "Concluído", "NÃO ATENDIDO": "Não atendido", "ATENDIDO": "Concluído"}
-prazos, sem_os = [], 0
+MAP_SIT_CRONO = {"Não iniciado": "Não iniciada", "Em andamento": "Em andamento", "Concluído": "Concluída",
+                 "Não atendido": "Concluída"}
+# Cronograma (atividades com período) e prazos (datas únicas) ficam em tabelas separadas
+prazos, cronograma, sem_os = [], [], 0
 for r in tabela("PRAZOS"):
     if num(r["COD_OS"]) not in ids_os:
         sem_os += 1
         continue
     origem, tipo = txt(r["PRAZO_ORIGEM"]), txt(r["PRAZO_TIPO"])
+    tipo = MAP_TIPO.get((tipo or "").upper(), tipo)
+    origem = MAP_ORIGEM.get((origem or "").upper(), origem)
+    descricao = txt(r["PRAZO_DESCRICAO"]) or "(sem descrição)"
+    inicio, termino = dt(r["PRAZO_DATA-RECEB"]), dt(r["PRAZO_DATA-TERMINO"])
+    sit = MAP_SIT_PRAZO.get((txt(r["PRAZO_SITUACAO"]) or "").upper(), "Não iniciado")
+    if tipo == "Cronograma":
+        obs = [f"Situação no cadastro antigo: {sit}" if sit == "Não atendido" else None,
+               f"Referência: {txt(r['PRAZO_REF'])}" if txt(r["PRAZO_REF"]) else None,
+               f"Origem: {origem}" if origem and origem != "Planejamento" else None]
+        if inicio and termino and termino < inicio:
+            termino = inicio
+        cronograma.append({"os_id": num(r["COD_OS"]), "descricao": descricao, "data_inicio": inicio,
+                           "data_termino": termino, "situacao": MAP_SIT_CRONO.get(sit, "Não iniciada"),
+                           "responsavel_id": resp(r["PRAZO_RESP"]), "periodo_id": em(r["PRAZO_N_ME"], periodos),
+                           "observacao": " | ".join(x for x in obs if x) or None})
+        continue
     qtd = num(r["PRAZO_CONCEDIDO"]) or (num(r["PRAZO_QTD"]) or None)
-    prazos.append({"id": num(r["CAD_PRAZO"]), "os_id": num(r["COD_OS"]),
-                   "origem": MAP_ORIGEM.get((origem or "").upper(), origem),
-                   "tipo": MAP_TIPO.get((tipo or "").upper(), tipo),
-                   "referencia": txt(r["PRAZO_REF"]), "descricao": txt(r["PRAZO_DESCRICAO"]) or "(sem descrição)",
-                   "data_inicio": dt(r["PRAZO_DATA-RECEB"]), "qtd_dias": qtd,
+    prazos.append({"id": num(r["CAD_PRAZO"]), "os_id": num(r["COD_OS"]), "origem": origem, "tipo": tipo,
+                   "referencia": txt(r["PRAZO_REF"]), "descricao": descricao,
+                   "data_inicio": inicio, "qtd_dias": qtd,
                    "tipo_dia": "úteis" if txt(r["PRAZO_TIPOdia"]) == "úteis" else None,
-                   "data_termino": dt(r["PRAZO_DATA-TERMINO"]),
-                   "situacao": MAP_SIT_PRAZO.get((txt(r["PRAZO_SITUACAO"]) or "").upper(), "Não iniciado"),
+                   "data_termino": termino,
                    "periodo_id": em(r["PRAZO_N_ME"], periodos), "responsavel_id": resp(r["PRAZO_RESP"])})
 inserir("prazo", prazos, list(prazos[0].keys()))
+inserir("cronograma", cronograma, list(cronograma[0].keys()))
 contagem["prazo"] = len(prazos)
+contagem["cronograma"] = len(cronograma)
 if sem_os:
     avisos["Registros não importados"].append(f"{sem_os} prazos sem OS (linhas vazias ou modelos do Access)")
 hoje = date.today().isoformat()
-vencidos = sum(1 for p in prazos if p["data_termino"] and p["data_termino"] < hoje
-               and p["situacao"] in ("Não iniciado", "Em andamento"))
-avisos["Prazos a atualizar"].append(
-    f"{vencidos} prazos já passaram da data final e continuam como \"Não iniciado\" ou \"Em andamento\". "
-    "Eles aparecem como Vencidos no painel de prazos até alguém atualizar a situação.")
+atrasadas = sum(1 for c in cronograma if c["data_termino"] and c["data_termino"] < hoje and c["situacao"] != "Concluída")
+avisos["Cronograma a atualizar"].append(
+    f"{atrasadas} atividades do cronograma já passaram da data final e não estão como \"Concluída\". "
+    "Elas aparecem como atrasadas até alguém atualizar a situação.")
 
 # ---------------------------------------------------------------- andamento e tarefas
 MAP_SIT_TAREFA = {1: "Concluída", 2: "A fazer", 3: "Em andamento", 4: "A fazer", 5: "A fazer", 7: "A fazer", 9: "Cancelada"}
@@ -330,7 +347,7 @@ contagem["processo"], contagem["processo_acesso"] = len(processos), len(acessos)
 # ---------------------------------------------------------------- sequências
 saida.append("\n-- ajusta os contadores para os próximos cadastros")
 for t in ["servico", "os_situacao_detalhe", "periodo", "mov_tipo", "mov_detalhe", "mov_situacao", "equipe",
-          "cliente", "contato", "os", "os_escopo", "prazo", "movimentacao", "tarefa", "parcela", "processo"]:
+          "cliente", "contato", "os", "os_escopo", "prazo", "cronograma", "movimentacao", "tarefa", "parcela", "processo"]:
     saida.append(f"select setval(pg_get_serial_sequence('{t}','id'), coalesce((select max(id) from {t}), 0) + 1, false);")
 saida.append("commit;")
 
