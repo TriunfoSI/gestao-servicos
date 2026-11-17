@@ -9,8 +9,8 @@ Sistema web para ordens de serviço: clientes, OS com situação técnica, comer
 
 | Pasta | Conteúdo |
 |---|---|
-| `app/` | o site (é o que vai para o GitHub Pages) |
-| `app/config.js` | endereço e chave pública do Supabase |
+| `docs/` | o site (publicado pelo GitHub Pages a partir desta pasta) |
+| `docs/config.js` | endereço e chave pública do Supabase |
 | `supabase/` | estrutura do banco, regras de acesso e relatório do cliente |
 | `migracao/` | conversor do Access para o banco novo |
 | `dev/` | ambiente de testes local (Postgres + PostgREST + GoTrue) |

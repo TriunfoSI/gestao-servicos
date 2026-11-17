@@ -2,7 +2,7 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-const APP = path.resolve(import.meta.dirname, '../app');
+const APP = path.resolve(import.meta.dirname, '../docs');
 const TIPOS = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
 const alvo = (url) => url.startsWith('/rest/v1') ? ['localhost', 3000, url.slice(8) || '/'] : url.startsWith('/auth/v1') ? ['localhost', 9999, url.slice(8) || '/'] : null;
 http.createServer((req, res) => {
