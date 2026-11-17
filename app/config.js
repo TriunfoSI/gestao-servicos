@@ -1,5 +1,4 @@
-// Endereço e chave pública do projeto no Supabase.
-// Pegue em: Supabase > Project Settings > API (Project URL e a chave "anon public").
-// A chave "anon" é pública por natureza; o que protege os dados são as regras de acesso do banco.
-export const SUPABASE_URL = 'COLE_AQUI_A_PROJECT_URL';
-export const SUPABASE_ANON_KEY = 'COLE_AQUI_A_CHAVE_ANON_PUBLIC';
+// Endereço e chave pública do projeto no Supabase (Project Settings > API).
+// A chave "publishable"/"anon" é pública por natureza; o que protege os dados são as regras de acesso do banco.
+export const SUPABASE_URL = 'https://tbaetcnzoivpzzunbykk.supabase.co';
+export const SUPABASE_ANON_KEY = 'sb_publishable_NqT_E9abyGYVAK4z2Rmcyg_N5CL6c2U';
