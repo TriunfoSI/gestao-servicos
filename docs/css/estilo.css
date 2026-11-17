@@ -88,6 +88,9 @@ a.cartao:hover { border-color: #b9c4bf; }
 .tabela td { padding: .55rem .6rem; border-bottom: 1px solid var(--linha); vertical-align: top; }
 .tabela td.texto { min-width: 220px; }
 .tabela .num { text-align: right; white-space: nowrap; }
+.tabela th.ordenavel { cursor: pointer; user-select: none; }
+.tabela th.ordenavel:hover { color: var(--marca); }
+.tabela th .seta { font-size: .7rem; }
 .tabela.clicavel tbody tr { cursor: pointer; }
 .tabela.clicavel tbody tr:hover, .tabela.clicavel tbody tr:focus { background: var(--marca-clara); outline: none; }
 
@@ -95,6 +98,8 @@ a.cartao:hover { border-color: #b9c4bf; }
 .filtros input[type=search] { flex: 1; min-width: 220px; }
 input, select, textarea { font: inherit; padding: .5rem .6rem; border: 1px solid #c9d2ce; border-radius: 8px; background: #fff; color: var(--texto); width: 100%; }
 .filtros select, .filtros input { width: auto; }
+.filtros .periodo { display: flex; align-items: center; gap: .35rem; font-size: .9rem; background: var(--papel); border: 1px solid var(--linha); border-radius: 8px; padding: .25rem .5rem; }
+.filtros .periodo input { padding: .3rem .4rem; }
 .filtros label { display: flex; align-items: center; gap: .35rem; font-size: .9rem; }
 .marcar input { width: auto; }
 input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); outline-offset: -1px; border-color: var(--marca); }

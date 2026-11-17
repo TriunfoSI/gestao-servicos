@@ -55,7 +55,7 @@ const CORES = {
   'Cancelado': 'cinza', 'Cancelada': 'cinza', 'Não atendido': 'cinza',
   'Vencido': 'vermelho', 'Atrasada': 'vermelho', 'Próximos 7 dias': 'laranja', 'Próximos 30 dias': 'amarelo',
   'Mais adiante': 'cinza', 'Sem data': 'cinza', 'A vencer': 'amarelo', 'Interna': 'cinza', 'Geral': 'azul',
-  'Previsto': 'amarelo',
+  'Previsto': 'amarelo', 'Alta': 'vermelho', 'Média': 'amarelo', 'Baixa': 'cinza',
 };
 export const etiqueta = (txt, extra) => txt ? h('span', { class: `etq ${CORES[txt] || 'cinza'} ${extra || ''}` }, txt) : '';
 
@@ -209,14 +209,45 @@ export function editarRegistro({ titulo, tabela, campos, registro, extras = {}, 
 
 // ------------------------------------------------------------------ tabela genérica
 // colunas: [{k, rotulo, f: (linha) => conteúdo, classe}]
-export function tabela(colunas, linhas, { aoClicar, vazio = 'Nada encontrado.' } = {}) {
+// Clique no título de uma coluna para ordenar (crescente / decrescente).
+// A coluna ordena pelo campo `k` ou pela função `ord(linha)`.
+export function tabela(colunas, linhas, { aoClicar, vazio = 'Nada encontrado.', ordem } = {}) {
   if (!linhas?.length) return h('p', { class: 'vazio' }, vazio);
-  return h('div', { class: 'tabela-rolagem' }, h('table', { class: 'tabela' + (aoClicar ? ' clicavel' : '') },
-    h('thead', {}, h('tr', {}, colunas.map((c) => h('th', { class: c.classe }, c.rotulo)))),
-    h('tbody', {}, linhas.map((l) => h('tr', { onclick: aoClicar ? () => aoClicar(l) : null, tabIndex: aoClicar ? 0 : null,
-      onkeydown: aoClicar ? (e) => { if (e.key === 'Enter') aoClicar(l); } : null },
-      colunas.map((c) => h('td', { class: c.classe, 'data-rotulo': c.rotulo }, c.f ? c.f(l) : (l[c.k] ?? '')))))),
-  ));
+  const caixa = h('div', { class: 'tabela-rolagem' });
+  let estado = ordem || null;   // { col: índice, dir: 1 | -1 }
+  const valor = (c, l) => (c.ord ? c.ord(l) : l[c.k]);
+  const comparar = (a, b) => {
+    if (a == null || a === '') return 1;
+    if (b == null || b === '') return -1;
+    if (typeof a === 'number' && typeof b === 'number') return a - b;
+    return String(a).localeCompare(String(b), 'pt-BR', { numeric: true, sensitivity: 'base' });
+  };
+  function desenhar() {
+    let ls = linhas;
+    if (estado) {
+      const c = colunas[estado.col];
+      ls = [...linhas].sort((x, y) => {
+        const vx = valor(c, x), vy = valor(c, y);
+        if (vx == null || vx === '') return 1;
+        if (vy == null || vy === '') return -1;
+        return comparar(vx, vy) * estado.dir;
+      });
+    }
+    limpar(caixa, h('table', { class: 'tabela' + (aoClicar ? ' clicavel' : '') },
+      h('thead', {}, h('tr', {}, colunas.map((c, i) => {
+        const pode = c.k || c.ord;
+        if (!pode) return h('th', { class: c.classe }, c.rotulo);
+        const seta = estado?.col === i ? (estado.dir === 1 ? ' ▲' : ' ▼') : '';
+        return h('th', { class: (c.classe || '') + ' ordenavel', title: 'Clique para ordenar', tabIndex: 0,
+          onclick: () => { estado = estado?.col === i ? { col: i, dir: -estado.dir } : { col: i, dir: 1 }; desenhar(); },
+          onkeydown: (e) => { if (e.key === 'Enter') e.target.click(); } }, c.rotulo, h('span', { class: 'seta' }, seta));
+      }))),
+      h('tbody', {}, ls.map((l) => h('tr', { onclick: aoClicar ? () => aoClicar(l) : null, tabIndex: aoClicar ? 0 : null,
+        onkeydown: aoClicar ? (e) => { if (e.key === 'Enter') aoClicar(l); } : null },
+        colunas.map((c) => h('td', { class: c.classe, 'data-rotulo': c.rotulo }, c.f ? c.f(l) : (l[c.k] ?? ''))))))));
+  }
+  desenhar();
+  return caixa;
 }
 
 export const cartao = (titulo, valor, detalhe, cor, href) =>

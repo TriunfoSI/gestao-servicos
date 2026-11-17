@@ -7,14 +7,14 @@ const TIPOS = ['Cronograma', 'Protocolo', 'Produto técnico', 'Vencimento', 'Vis
 
 export function colunasPrazo({ comOS = true, acaoRapida } = {}) {
   return [
-    { rotulo: 'Vence', f: (p) => h('span', { class: p.alerta === 'Vencido' ? 'txt-vermelho' : '' }, fmtData(p.data_termino)) },
-    comOS && { rotulo: 'OS', f: (p) => h('a', { href: `#/os/${p.os_id}/prazos`, onclick: (e) => e.stopPropagation() }, p.os_numero || '—') },
+    { rotulo: 'Vence', ord: (p) => p.data_termino, f: (p) => h('span', { class: p.alerta === 'Vencido' ? 'txt-vermelho' : '' }, fmtData(p.data_termino)) },
+    comOS && { rotulo: 'OS', ord: (p) => p.os_numero, f: (p) => h('a', { href: `#/os/${p.os_id}/prazos`, onclick: (e) => e.stopPropagation() }, p.os_numero || '—') },
     comOS && { rotulo: 'Cliente', k: 'cliente_curto' },
     { rotulo: 'Prazo', k: 'descricao', classe: 'texto' },
     { rotulo: 'Tipo', k: 'tipo' },
     { rotulo: 'Origem', k: 'origem' },
     { rotulo: 'Resp.', k: 'responsavel_iniciais' },
-    { rotulo: 'Situação', f: (p) => etiqueta(p.situacao) },
+    { rotulo: 'Situação', k: 'situacao', f: (p) => etiqueta(p.situacao) },
     { rotulo: 'Alerta', f: (p) => p.alerta !== 'Encerrado' ? etiqueta(p.alerta) : '' },
     acaoRapida && { rotulo: '', f: (p) => p.alerta !== 'Encerrado' ? h('button', { class: 'btn pequeno', onclick: (e) => { e.stopPropagation(); acaoRapida(p); } }, 'Concluir') : '' },
   ].filter(Boolean);

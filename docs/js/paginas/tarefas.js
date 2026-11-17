@@ -2,6 +2,7 @@ import { sb, st, h, limpar, q, aviso, tabela, etiqueta, fmtData, fmtDataHora, ed
   opcoesEquipe, eGestor, perfil, botao } from '../base.js';
 
 export const SIT_TAREFA = ['A fazer', 'Em andamento', 'Aguardando terceiros', 'Concluída', 'Cancelada'];
+export const PRIORIDADES = ['Alta', 'Média', 'Baixa'];
 
 async function opcoesOS() {
   const lista = await q(sb.from('v_os').select('id,numero,cliente_curto,titulo').neq('sit_contrato', 'Encerrado').order('id', { ascending: false }));
@@ -16,7 +17,8 @@ export async function editarTarefa(registro, depois, osId) {
       osId ? null : { k: 'os_id', rotulo: 'OS (deixe em branco para tarefa geral)', tipo: 'opcoes', opcoes: listaOS, largura: 2 },
       { k: 'descricao', rotulo: 'Tarefa', tipo: 'area', obrig: true, linhas: 3 },
       { k: 'responsavel_id', rotulo: 'Responsável', tipo: 'opcoes', opcoes: opcoesEquipe, obrig: true },
-      { k: 'data_reuniao', rotulo: 'Data da reunião', tipo: 'data', padrao: new Date().toLocaleDateString('sv-SE') },
+      { k: 'prioridade', rotulo: 'Prioridade', tipo: 'opcoes', opcoes: PRIORIDADES, obrig: true, numerico: false, padrao: 'Média' },
+      { k: 'data_reuniao', rotulo: 'Data de criação', tipo: 'data', padrao: new Date().toLocaleDateString('sv-SE') },
       { k: 'prazo', rotulo: 'Prazo', tipo: 'data' },
       { k: 'situacao', rotulo: 'Situação', tipo: 'opcoes', opcoes: SIT_TAREFA, obrig: true, numerico: false, padrao: 'A fazer' },
       { k: 'observacao', rotulo: 'Observação', tipo: 'area', linhas: 2 },
@@ -47,7 +49,8 @@ export async function abrirTarefa(id, depois) {
     h('dl', { class: 'detalhes compacto' },
       h('dt', {}, 'OS'), h('dd', {}, t.os_id ? h('a', { href: `#/os/${t.os_id}/tarefas`, onclick: () => fechar() }, `${t.os_numero} — ${t.cliente_curto}`) : 'Tarefa geral'),
       h('dt', {}, 'Responsável'), h('dd', {}, t.responsavel_nome || '—'),
-      h('dt', {}, 'Reunião'), h('dd', {}, fmtData(t.data_reuniao) || '—'),
+      h('dt', {}, 'Prioridade'), h('dd', {}, etiqueta(t.prioridade)),
+      h('dt', {}, 'Data de criação'), h('dd', {}, fmtData(t.data_reuniao) || '—'),
       h('dt', {}, 'Prazo'), h('dd', {}, fmtData(t.prazo) || '—'),
       h('dt', {}, 'Situação'), h('dd', {}, etiqueta(t.situacao)),
       t.observacao ? [h('dt', {}, 'Observação'), h('dd', { class: 'pre' }, t.observacao)] : null),
@@ -63,6 +66,11 @@ export async function paginaTarefas(el) {
   const resp = h('select', {}, h('option', { value: '' }, 'Todos os responsáveis'), opcoesEquipe().map(([v, t]) => h('option', { value: v }, t)));
   if (tecnico) resp.value = st.eu.id;
   const sit = h('select', {}, h('option', { value: 'abertas' }, 'Abertas'), h('option', { value: '' }, 'Todas'), SIT_TAREFA.map((s) => h('option', {}, s)));
+  const prio = h('select', {}, h('option', { value: '' }, 'Todas as prioridades'), PRIORIDADES.map((p) => h('option', {}, p)));
+  const data = () => h('input', { type: 'date' });
+  const criadoDe = data(), criadoAte = data(), atualDe = data(), atualAte = data();
+  const periodo = (rotulo, de, ate) => h('span', { class: 'periodo' }, h('span', {}, rotulo), de, h('span', {}, 'a'), ate);
+  const diaSeguinte = (d) => { const x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + 1); return x.toLocaleDateString('sv-SE'); };
   const area = h('div');
 
   async function carregar() {
@@ -70,22 +78,29 @@ export async function paginaTarefas(el) {
     if (resp.value) c = c.eq('responsavel_id', resp.value);
     if (sit.value === 'abertas') c = c.not('situacao', 'in', '("Concluída","Cancelada")');
     else if (sit.value) c = c.eq('situacao', sit.value);
+    if (prio.value) c = c.eq('prioridade', prio.value);
+    if (criadoDe.value) c = c.gte('data_reuniao', criadoDe.value);
+    if (criadoAte.value) c = c.lte('data_reuniao', criadoAte.value);
+    if (atualDe.value) c = c.gte('ultima_atualizacao', atualDe.value);
+    if (atualAte.value) c = c.lt('ultima_atualizacao', diaSeguinte(atualAte.value));
     const linhas = await q(c);
     const hojeStr = new Date().toLocaleDateString('sv-SE');
     limpar(area, h('p', { class: 'contagem' }, `${linhas.length} tarefas`), tabela([
       { rotulo: 'Tarefa', k: 'descricao', classe: 'texto' },
-      { rotulo: 'OS', f: (t) => t.os_numero ? `${t.os_numero} · ${t.cliente_curto}` : 'Geral' },
+      { rotulo: 'OS', f: (t) => t.os_numero ? `${t.os_numero} · ${t.cliente_curto}` : 'Geral', ord: (t) => t.os_numero || '' },
       { rotulo: 'Resp.', k: 'responsavel_iniciais' },
-      { rotulo: 'Reunião', f: (t) => fmtData(t.data_reuniao) },
-      { rotulo: 'Prazo', f: (t) => h('span', { class: t.prazo && t.prazo < hojeStr && !['Concluída', 'Cancelada'].includes(t.situacao) ? 'txt-vermelho' : '' }, fmtData(t.prazo)) },
-      { rotulo: 'Situação', f: (t) => etiqueta(t.situacao) },
-      { rotulo: 'Atualizada', f: (t) => fmtData(t.ultima_atualizacao || t.atualizado_em) },
+      { rotulo: 'Prioridade', f: (t) => etiqueta(t.prioridade), ord: (t) => t.prioridade_ordem },
+      { rotulo: 'Data de criação', f: (t) => fmtData(t.data_reuniao), ord: (t) => t.data_reuniao },
+      { rotulo: 'Prazo', f: (t) => h('span', { class: t.prazo && t.prazo < hojeStr && !['Concluída', 'Cancelada'].includes(t.situacao) ? 'txt-vermelho' : '' }, fmtData(t.prazo)), ord: (t) => t.prazo },
+      { rotulo: 'Situação', f: (t) => etiqueta(t.situacao), k: 'situacao' },
+      { rotulo: 'Atualizada', f: (t) => fmtData(t.ultima_atualizacao || t.atualizado_em), ord: (t) => t.ultima_atualizacao || t.atualizado_em },
     ], linhas, { aoClicar: (t) => abrirTarefa(t.id, carregar), vazio: 'Nenhuma tarefa com estes filtros.' }));
   }
-  [resp, sit].forEach((x) => x.addEventListener('change', carregar));
+  [resp, sit, prio, criadoDe, criadoAte, atualDe, atualAte].forEach((x) => x.addEventListener('change', carregar));
+  const limparFiltros = botao('Limpar filtros', () => { [criadoDe, criadoAte, atualDe, atualAte].forEach((x) => { x.value = ''; }); prio.value = ''; carregar(); });
   limpar(el, h('div', { class: 'titulo-pagina' }, h('h1', {}, 'Tarefas'),
     eGestor() ? botao('Nova tarefa', () => editarTarefa(null, carregar), 'primario') : null),
-  h('p', { class: 'ajuda' }, 'Tarefas definidas nas reuniões técnicas. Clique numa tarefa para atualizar a situação e deixar um comentário para a coordenação.'),
-  h('div', { class: 'filtros' }, resp, sit), area);
+  h('p', { class: 'ajuda' }, 'Tarefas definidas nas reuniões técnicas. Clique numa tarefa para atualizar a situação e deixar um comentário para a coordenação. Clique no título de uma coluna para ordenar (clique de novo para inverter).'),
+  h('div', { class: 'filtros' }, resp, sit, prio, periodo('Criada de', criadoDe, criadoAte), periodo('Atualizada de', atualDe, atualAte), limparFiltros), area);
   await carregar();
 }

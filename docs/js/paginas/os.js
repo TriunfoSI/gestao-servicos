@@ -247,9 +247,10 @@ async function abaTarefas(el, ctx) {
     tabela([
       { rotulo: 'Tarefa', k: 'descricao', classe: 'texto' },
       { rotulo: 'Responsável', k: 'responsavel_nome' },
-      { rotulo: 'Reunião', f: (t) => fmtData(t.data_reuniao) },
-      { rotulo: 'Prazo', f: (t) => fmtData(t.prazo) },
-      { rotulo: 'Situação', f: (t) => etiqueta(t.situacao) },
+      { rotulo: 'Prioridade', f: (t) => etiqueta(t.prioridade), ord: (t) => t.prioridade_ordem },
+      { rotulo: 'Data de criação', f: (t) => fmtData(t.data_reuniao), ord: (t) => t.data_reuniao },
+      { rotulo: 'Prazo', f: (t) => fmtData(t.prazo), ord: (t) => t.prazo },
+      { rotulo: 'Situação', f: (t) => etiqueta(t.situacao), k: 'situacao' },
     ], linhas, { aoClicar: (t) => abrirTarefa(t.id, recarregar), vazio: 'Nenhuma tarefa para esta OS.' })));
 }
 

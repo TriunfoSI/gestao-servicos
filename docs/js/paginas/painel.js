@@ -7,7 +7,7 @@ export async function paginaPainel(el) {
 
   let prazosQ = sb.from('v_prazo').select('*').in('alerta', ['Vencido', 'Próximos 7 dias', 'Próximos 30 dias']).order('data_termino');
   if (soMeu) prazosQ = prazosQ.eq('responsavel_id', meuId);
-  let tarefasQ = sb.from('v_tarefa').select('*').not('situacao', 'in', '("Concluída","Cancelada")').order('prazo', { nullsFirst: false });
+  let tarefasQ = sb.from('v_tarefa').select('*').not('situacao', 'in', '("Concluída","Cancelada")').order('prioridade_ordem').order('prazo', { nullsFirst: false });
   if (soMeu) tarefasQ = tarefasQ.eq('responsavel_id', meuId);
   let osQ = sb.from('os').select('id,sit_contrato,revisar_migracao,responsavel_id');
 
@@ -51,6 +51,7 @@ export async function paginaPainel(el) {
         tabela([
           { rotulo: 'Tarefa', k: 'descricao', classe: 'texto' },
           { rotulo: 'OS', k: 'os_numero' },
+          { rotulo: 'Prioridade', f: (t) => etiqueta(t.prioridade), ord: (t) => t.prioridade_ordem },
           !soMeu && { rotulo: 'Resp.', k: 'responsavel_iniciais' },
           { rotulo: 'Situação', f: (t) => etiqueta(t.situacao) },
         ].filter(Boolean), tarefas.slice(0, 10), { aoClicar: (t) => abrirTarefa(t.id, () => paginaPainel(el)), vazio: 'Nenhuma tarefa aberta.' }))),
