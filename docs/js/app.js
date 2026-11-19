@@ -8,6 +8,8 @@ import { paginaTarefas } from './paginas/tarefas.js';
 import { paginaFinanceiro } from './paginas/financeiro.js';
 import { paginaClientes, paginaCliente } from './paginas/clientes.js';
 import { paginaCadastros } from './paginas/cadastros.js';
+import { paginaFornecedores, paginaFornecedor } from './paginas/fornecedores.js';
+import { paginaBusca } from './paginas/busca.js';
 
 const raiz = document.getElementById('app');
 
@@ -21,19 +23,31 @@ const ROTAS = [
   [/^#\/financeiro$/, paginaFinanceiro, eFinanceiro],
   [/^#\/clientes$/, paginaClientes],
   [/^#\/clientes\/(\d+)$/, paginaCliente],
+  [/^#\/fornecedores$/, paginaFornecedores],
+  [/^#\/fornecedores\/(\d+)$/, paginaFornecedor],
+  [/^#\/busca$/, paginaBusca],
   [/^#\/cadastros$/, paginaCadastros, eGestor],
 ];
 
 function menu() {
   const itens = [
     ['#/', 'Início'], ['#/os', 'Ordens de serviço'], ['#/cronograma', 'Cronograma'], ['#/prazos', 'Prazos'], ['#/tarefas', 'Tarefas'],
-    eFinanceiro() && ['#/financeiro', 'Financeiro'], ['#/clientes', 'Clientes'], eGestor() && ['#/cadastros', 'Cadastros'],
+    eFinanceiro() && ['#/financeiro', 'Financeiro'], ['#/clientes', 'Clientes'], ['#/fornecedores', 'Fornecedores'],
+    eGestor() && ['#/cadastros', 'Cadastros'],
   ].filter(Boolean);
   const nav = h('nav', { class: 'menu', id: 'menu' }, itens.map(([href, txt]) => h('a', { href }, txt)));
+  const termo = h('input', { type: 'search', placeholder: '🔍 Busca geral…', 'aria-label': 'Busca geral' });
+  const busca = h('form', { class: 'busca-topo', onsubmit: (e) => {
+    e.preventDefault();
+    if (!termo.value.trim()) return;
+    const destino = `#/busca?q=${encodeURIComponent(termo.value.trim())}`;
+    termo.value = '';
+    if (location.hash === destino) navegar(); else location.hash = destino;
+  } }, termo);
   return h('header', { class: 'topo' },
     h('a', { class: 'marca', href: '#/' }, h('span', { class: 'marca-icone' }, 'OS'), h('span', {}, 'Gestão de Serviços')),
     h('button', { class: 'btn-icone menu-botao', 'aria-label': 'Menu', onclick: () => nav.classList.toggle('aberto') }, '☰'),
-    nav,
+    nav, busca,
     h('div', { class: 'usuario' },
       h('span', { class: 'usuario-nome' }, st.eu.nome, h('small', {}, NOME_PERFIL[st.eu.perfil])),
       h('button', { class: 'btn pequeno', onclick: async () => { await sb.auth.signOut(); location.hash = '#/'; iniciar(); } }, 'Sair')));

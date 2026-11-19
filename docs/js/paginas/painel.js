@@ -63,7 +63,7 @@ export async function paginaPainel(el) {
       h('section', { class: 'secao' }, h('div', { class: 'secao-topo' }, h('h3', {}, 'Cronograma ', h('small', {}, '· próximos 2 meses')), h('a', { href: '#/cronograma' }, 'Ver tudo')),
         h('div', { class: 'caixa-rolagem' }, tabela(colCrono, crono, { vazio: 'Nenhuma atividade prevista para os próximos dois meses.' }))),
       h('section', { class: 'secao' }, h('div', { class: 'secao-topo' }, h('h3', {}, 'Prazos ', h('small', {}, `· ${aVencer.length} a vencer, ${vencidos.length} vencidos`)), h('a', { href: '#/prazos' }, 'Ver tudo')),
-        h('div', { class: 'caixa-rolagem' }, tabela(colPrazo, [...aVencer, ...vencidos, ...prazos.filter((p) => p.situacao === 'Sem data')], { vazio: 'Nenhum prazo cadastrado.' })))),
+        h('div', { class: 'caixa-rolagem' }, tabela(colPrazo, [...aVencer, ...vencidos, ...prazos.filter((p) => p.situacao === 'Sem data'), ...prazos.filter((p) => p.atendido).reverse()], { vazio: 'Nenhum prazo cadastrado.' })))),
     h('section', { class: 'secao' }, h('div', { class: 'secao-topo' }, h('h3', {}, soMeu ? 'Minhas tarefas' : 'Tarefas abertas'), h('a', { href: '#/tarefas' }, 'Ver todas')),
       tabela([
         { rotulo: 'Tarefa', k: 'descricao', classe: 'texto' },

@@ -1,7 +1,7 @@
 import { sb, st, h, limpar, q, aviso, tabela, etiqueta, fmtData, fmtDataHora, editarRegistro, abrirJanela, formulario,
   opcoesEquipe, eGestor, perfil, botao } from '../base.js';
 
-export const SIT_TAREFA = ['A fazer', 'Em andamento', 'Aguardando terceiros', 'Concluída', 'Cancelada'];
+export const SIT_TAREFA = ['A fazer', 'Em andamento', 'Apoio técnico', 'Aguardando terceiros', 'Concluída', 'Cancelada'];
 export const PRIORIDADES = ['Alta', 'Média', 'Baixa'];
 
 async function opcoesOS() {
@@ -21,6 +21,7 @@ export async function editarTarefa(registro, depois, osId) {
       { k: 'data_reuniao', rotulo: 'Data de criação', tipo: 'data', padrao: new Date().toLocaleDateString('sv-SE') },
       { k: 'prazo', rotulo: 'Prazo', tipo: 'data' },
       { k: 'situacao', rotulo: 'Situação', tipo: 'opcoes', opcoes: SIT_TAREFA, obrig: true, numerico: false, padrao: 'A fazer' },
+      { k: 'orientacao_tecnica', rotulo: 'Orientação técnica', tipo: 'area', linhas: 4, ajuda: 'Orientação da coordenação para o técnico executar a tarefa.' },
       { k: 'observacao', rotulo: 'Observação', tipo: 'area', linhas: 2 },
     ].filter(Boolean) });
 }
@@ -35,7 +36,7 @@ export async function abrirTarefa(id, depois) {
   let fechar;
   const atualizar = formulario([
     { k: 'situacao', rotulo: 'Nova situação', tipo: 'opcoes', opcoes: SIT_TAREFA, obrig: true, numerico: false },
-    { k: 'comentario', rotulo: 'Comentário para a coordenação', tipo: 'area', linhas: 3 },
+    { k: 'comentario', rotulo: 'Comentário do técnico', tipo: 'area', linhas: 3 },
   ], { situacao: t.situacao }, {
     rotuloSalvar: 'Atualizar',
     aoSalvar: async (d) => {
@@ -53,6 +54,7 @@ export async function abrirTarefa(id, depois) {
       h('dt', {}, 'Data de criação'), h('dd', {}, fmtData(t.data_reuniao) || '—'),
       h('dt', {}, 'Prazo'), h('dd', {}, fmtData(t.prazo) || '—'),
       h('dt', {}, 'Situação'), h('dd', {}, etiqueta(t.situacao)),
+      t.orientacao_tecnica ? [h('dt', {}, 'Orientação técnica'), h('dd', { class: 'pre' }, t.orientacao_tecnica)] : null,
       t.observacao ? [h('dt', {}, 'Observação'), h('dd', { class: 'pre' }, t.observacao)] : null),
     eGestor() ? h('div', { class: 'acoes esquerda' }, botao('Editar tarefa', () => { fechar(); editarTarefa(t, depois); })) : null,
     h('h3', {}, 'Atualizar'), atualizar,
@@ -100,7 +102,7 @@ export async function paginaTarefas(el) {
   const limparFiltros = botao('Limpar filtros', () => { [criadoDe, criadoAte, atualDe, atualAte].forEach((x) => { x.value = ''; }); prio.value = ''; carregar(); });
   limpar(el, h('div', { class: 'titulo-pagina' }, h('h1', {}, 'Tarefas'),
     eGestor() ? botao('Nova tarefa', () => editarTarefa(null, carregar), 'primario') : null),
-  h('p', { class: 'ajuda' }, 'Tarefas definidas nas reuniões técnicas. Clique numa tarefa para atualizar a situação e deixar um comentário para a coordenação. Clique no título de uma coluna para ordenar (clique de novo para inverter).'),
+  h('p', { class: 'ajuda' }, 'Tarefas definidas nas reuniões técnicas. Clique numa tarefa para ver a orientação técnica, atualizar a situação e deixar o comentário do técnico. Clique no título de uma coluna para ordenar (clique de novo para inverter).'),
   h('div', { class: 'filtros' }, resp, sit, prio, periodo('Criada de', criadoDe, criadoAte), periodo('Atualizada de', atualDe, atualAte), limparFiltros), area);
   await carregar();
 }
