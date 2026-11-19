@@ -26,8 +26,8 @@ h3 { font-size: 1rem; margin: 0; }
 .marca-icone { background: #fff; color: var(--marca); border-radius: 7px; font-size: .75rem; padding: .25rem .35rem; font-weight: 800; }
 .marca.grande { justify-content: center; font-size: 1.2rem; color: var(--marca); margin-bottom: 1rem; }
 .marca.grande .marca-icone { background: var(--marca); color: #fff; }
-.menu { display: flex; gap: .25rem; flex: 1; }
-.menu a { color: #e3f1ec; text-decoration: none; padding: .45rem .7rem; border-radius: 7px; font-size: .93rem; }
+.menu { display: flex; gap: .1rem; flex: 1; flex-wrap: wrap; }
+.menu a { color: #e3f1ec; text-decoration: none; white-space: nowrap; padding: .45rem .55rem; border-radius: 7px; font-size: .93rem; }
 .menu a:hover { background: rgba(255,255,255,.12); }
 .menu a.ativo { background: rgba(255,255,255,.2); color: #fff; font-weight: 600; }
 .usuario { display: flex; align-items: center; gap: .75rem; }
@@ -193,3 +193,23 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
   .secao { box-shadow: none; break-inside: avoid; }
 }
 .nowrap { white-space: nowrap; }
+
+/* ajustes 19/11/2026 */
+.varios { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: .3rem .9rem; border: 1px solid #c9d2ce; border-radius: 8px; padding: .5rem .7rem; max-height: 14rem; overflow-y: auto; }
+.varios label.marcar { display: flex; align-items: center; gap: .35rem; font-weight: 400; color: var(--texto); }
+.novo-item { display: flex; gap: .4rem; align-items: center; margin-top: .35rem; }
+.novo-item input { flex: 1; padding: .3rem .5rem; }
+.previa-situacao { display: block; margin-top: .3rem; }
+.secao.atendidos { opacity: .9; }
+.busca-topo { display: flex; align-items: center; }
+.busca-topo input { width: 11rem; padding: .35rem .6rem; border: 0; border-radius: 7px; }
+.busca-areas { display: flex; flex-wrap: wrap; gap: .3rem .9rem; margin: .25rem 0 .75rem; }
+.busca-areas label { display: flex; align-items: center; gap: .3rem; font-size: .9rem; }
+.busca-areas input { width: auto; }
+.busca-grande { display: flex; gap: .5rem; margin-bottom: .5rem; }
+.busca-grande input { flex: 1; font-size: 1.05rem; }
+.subcats { margin: .25rem 0 0 1rem; padding: 0; list-style: none; }
+.subcats li { display: inline-block; margin: .15rem .3rem .15rem 0; }
+.categoria-linha { border-bottom: 1px solid var(--linha); padding: .6rem 0; }
+.categoria-linha:last-child { border-bottom: 0; }
+@media (max-width: 900px) { .busca-topo { flex-basis: 100%; padding-bottom: .5rem; } .busca-topo input { width: 100%; } }

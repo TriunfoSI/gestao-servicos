@@ -32,7 +32,7 @@
     const data = (d) => d ? new Date(d.length === 10 ? d + 'T12:00:00' : d).toLocaleDateString('pt-BR') : '';
     const reais = (v) => v == null ? '' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const COR = { 'Em andamento': 'azul', 'Ativo': 'azul', 'Em aberto': 'amarelo', 'Paralisado': 'laranja', 'Finalizado': 'verde', 'Encerrado': 'verde',
-      'Concluído': 'verde', 'Pago': 'verde', 'Não iniciado': 'cinza', 'Cancelado': 'cinza', 'Nota fiscal emitida': 'roxo', 'Pendência': 'laranja', 'Não atendido': 'cinza', 'Concluída': 'verde', 'Não iniciada': 'cinza', 'A vencer': 'amarelo', 'Vencido': 'vermelho' };
+      'Concluído': 'verde', 'Pago': 'verde', 'Não iniciado': 'cinza', 'Cancelado': 'cinza', 'Nota fiscal emitida': 'roxo', 'Pendência': 'laranja', 'Não atendido': 'cinza', 'Concluída': 'verde', 'Não iniciada': 'cinza', 'A vencer': 'amarelo', 'Vencido': 'vermelho', 'Atendido': 'verde', 'Atendido fora do prazo': 'laranja' };
     const etq = (t) => t ? h('span', { class: 'etq ' + (COR[t] || 'cinza') }, t) : '';
     const tabela = (cols, linhas, vazio) => !linhas.length ? h('p', { class: 'vazio' }, vazio) :
       h('div', { class: 'tabela-rolagem' }, h('table', { class: 'tabela' }, h('thead', {}, h('tr', {}, cols.map(([r]) => h('th', {}, r)))),
@@ -64,14 +64,15 @@
             .filter(([, v]) => v).map(([k, v]) => [h('dt', {}, k), h('dd', {}, v)]))),
         r.escopo.length ? secao('Escopo', h('ol', { class: 'escopo' }, r.escopo.map((e) => h('li', {}, h('strong', {}, e.servico || ''), e.descricao ? h('p', { class: 'pre' }, e.descricao) : null)))) : null,
         secao('Cronograma', tabela([['Atividade', (p) => p.descricao, 'texto'], ['Início', (p) => data(p.inicio)], ['Término', (p) => data(p.termino)], ['Situação', (p) => etq(p.situacao)]], r.cronograma || [], 'Nenhuma atividade cadastrada.')),
-        (r.prazos || []).length ? secao('Prazos', tabela([['Data', (p) => data(p.data)], ['Prazo', (p) => p.descricao, 'texto'], ['Tipo', (p) => p.tipo || ''], ['Origem', (p) => p.origem || ''], ['Situação', (p) => etq(p.situacao)]], r.prazos, '')) : null,
+        (r.prazos || []).length ? secao('Prazos', tabela([['Data', (p) => data(p.data)], ['Prazo', (p) => p.descricao, 'texto'], ['Tipo', (p) => p.tipo || ''], ['Origem', (p) => p.origem || ''], ['Situação', (p) => etq(p.situacao)], ['Atendido em', (p) => data(p.atendimento)]], r.prazos, '')) : null,
         secao('Andamento', r.andamento.length ? h('ul', { class: 'linha-tempo' }, r.andamento.map((m) => h('li', {}, h('div', { class: 'lt-data' }, data(m.data)),
           h('div', { class: 'lt-corpo' }, m.detalhe ? h('strong', {}, m.detalhe) : null, h('p', { class: 'pre' }, m.descricao))))) : h('p', { class: 'vazio' }, 'Nenhum registro de andamento divulgado ainda.')),
-        secao('Processos nos órgãos', tabela([['Órgão', (p) => p.instituicao || ''], ['Nº do processo', (p) => p.referencia || ''], ['Abertura', (p) => data(p.abertura)], ['Objetivo', (p) => p.objetivo || '', 'texto']], r.processos, 'Nenhum processo vinculado.')),
+        secao('Processos e documentos', tabela([['Tipo', (p) => p.natureza || ''], ['Órgão', (p) => p.instituicao || ''], ['Número', (p) => p.referencia || ''], ['Data', (p) => data(p.abertura)], ['Assunto', (p) => p.objetivo || '', 'texto'],
+          ['Verificado em', (p) => data(p.verificado_em)], ['Situação', (p) => h('span', { class: 'pre' }, p.situacao || ''), 'texto']], r.processos, 'Nenhum processo ou documento vinculado.')),
         secao('Financeiro',
           r.financeiro.length ? h('p', {}, `Total: ${reais(totais.t)} · Pago: ${reais(totais.p)} · A pagar: ${reais(totais.t - totais.p)}`) : null,
           tabela([['Parcela', (p) => p.parcela || ''], ['Referência', (p) => p.referencia || '', 'texto'], ['Valor', (p) => reais(p.valor), 'num'], ['Previsão', (p) => data(p.prevista)], ['Pagamento', (p) => data(p.paga)], ['Situação', (p) => etq(p.situacao)]], r.financeiro, 'Nenhuma parcela cadastrada.')),
-        r.produtos.length ? secao('Produtos técnicos entregues', h('ul', {}, r.produtos.map((p) => h('li', {}, p.nome, ' — ', data(p.enviado_em))))) : null,
+        r.produtos.length ? secao('Produtos técnicos', tabela([['Tipo', (p) => p.tipo || ''], ['Número', (p) => p.numero || ''], ['Título', (p) => p.nome, 'texto'], ['Data', (p) => data(p.data || p.enviado_em)]], r.produtos, '')) : null,
         h('p', { class: 'rodape' }, `Relatório gerado em ${new Date().toLocaleString('pt-BR')}. Em caso de dúvidas, fale com o responsável técnico.`)].filter(Boolean));
     }
     iniciar();

@@ -56,6 +56,7 @@ const CORES = {
   'Vencido': 'vermelho', 'Atrasada': 'vermelho', 'Próximos 7 dias': 'laranja', 'Próximos 30 dias': 'amarelo',
   'Mais adiante': 'cinza', 'Sem data': 'cinza', 'A vencer': 'amarelo', 'Interna': 'cinza', 'Geral': 'azul',
   'Previsto': 'amarelo', 'Não iniciada': 'cinza', 'Alta': 'vermelho', 'Média': 'amarelo', 'Baixa': 'cinza',
+  'Atendido': 'verde', 'Atendido fora do prazo': 'laranja', 'Apoio técnico': 'roxo', 'Processo': 'azul', 'Documento': 'roxo',
 };
 export const etiqueta = (txt, extra) => txt ? h('span', { class: `etq ${CORES[txt] || 'cinza'} ${extra || ''}` }, txt) : '';
 
@@ -93,6 +94,11 @@ export async function carregarListas() {
     mov_detalhe: sb.from('mov_detalhe').select('*').order('descricao'),
     mov_situacao: sb.from('mov_situacao').select('*').order('id'),
     cliente: sb.from('cliente').select('id,nome,nome_reduzido').order('nome'),
+    fornecedor: sb.from('v_fornecedor').select('id,nome,nome_fantasia,ativo,tipos_servico_ids').order('nome'),
+    tipo_servico_fornecedor: sb.from('tipo_servico_fornecedor').select('*').order('descricao'),
+    tipo_produto_tecnico: sb.from('tipo_produto_tecnico').select('*').order('descricao'),
+    os_categoria: sb.from('os_categoria').select('*').order('descricao'),
+    os_subcategoria: sb.from('os_subcategoria').select('*').order('descricao'),
   };
   const res = await Promise.all(Object.values(tabelas));
   Object.keys(tabelas).forEach((k, i) => { st.listas[k] = res[i].data || []; });
@@ -139,6 +145,7 @@ export function formulario(campos, valores = {}, { aoSalvar, aoExcluir, rotuloSa
     for (const c of campos) {
       if (c.tipo === 'info' || c.desativado) continue;
       const el = ctrls[c.k];
+      if (c.tipo === 'varios') { dados[c.k] = [...el.querySelectorAll('input:checked')].map((x) => Number(x.value)); continue; }
       let v = c.tipo === 'marcar' ? el.checked : el.value.trim();
       if (v === '' ) v = null;
       if (v != null && ['numero', 'dinheiro'].includes(c.tipo)) v = Number(String(v).replace(',', '.'));
@@ -162,6 +169,11 @@ export function formulario(campos, valores = {}, { aoSalvar, aoExcluir, rotuloSa
           return h('option', { value: val, selected: String(val) === String(v ?? c.padrao ?? '') }, txt);
         }));
     } else if (c.tipo === 'marcar') el = h('input', { type: 'checkbox', checked: v ?? c.padrao ?? false });
+    else if (c.tipo === 'varios') {
+      const marcados = new Set((v || []).map(String));
+      el = h('div', { class: 'varios' }, (typeof c.opcoes === 'function' ? c.opcoes() : c.opcoes).map(([val, txt]) =>
+        h('label', { class: 'marcar' }, h('input', { type: 'checkbox', value: val, checked: marcados.has(String(val)) }), ' ', txt)));
+    }
     else {
       const tipos = { data: 'date', numero: 'number', dinheiro: 'number', email: 'email', url: 'url', senha: 'text' };
       el = h('input', { type: tipos[c.tipo] || 'text', value: v ?? c.padrao ?? '', step: c.tipo === 'dinheiro' ? '0.01' : null });
@@ -171,10 +183,10 @@ export function formulario(campos, valores = {}, { aoSalvar, aoExcluir, rotuloSa
         grade.append(h('datalist', { id }, c.sugestoes.map((s) => h('option', { value: s }))));
       }
     }
-    if (c.obrig) el.required = true;
+    if (c.obrig && c.tipo !== 'varios') el.required = true;
     if (c.desativado) el.disabled = true;
     ctrls[c.k] = el;
-    grade.append(h('label', { class: 'campo' + (c.largura === 2 || c.tipo === 'area' ? ' largo' : '') },
+    grade.append(h(c.tipo === 'varios' ? 'div' : 'label', { class: 'campo' + (c.largura === 2 || c.tipo === 'area' || c.tipo === 'varios' ? ' largo' : '') },
       h('span', {}, c.rotulo, c.obrig ? ' *' : ''), el, c.ajuda ? h('small', {}, c.ajuda) : null));
   }
   form.append(grade, h('div', { class: 'acoes' },
