@@ -299,6 +299,28 @@ async function abaTarefas(el, ctx) {
 }
 
 // ------------------------------------------------------------------ Processos / Documentos
+const PERIODICIDADES = ['Semanal', 'Quinzenal', 'Mensal', 'Bimestral', 'Semestral', 'Nenhuma'];
+
+// mesma regra da função calcula_proxima_verificacao do banco (só para mostrar enquanto edita)
+function proximaVerificacao(verificado, periodicidade) {
+  if (!verificado) return null;
+  const [a, m, d] = verificado.split('-').map(Number);
+  const somaMeses = (n) => {
+    const fim = new Date(a, m - 1 + n + 1, 0).getDate();          // último dia do mês de destino
+    return new Date(a, m - 1 + n, Math.min(d, fim));
+  };
+  const dt = { Semanal: new Date(a, m - 1, d + 7), Quinzenal: new Date(a, m - 1, d + 15),
+    Mensal: somaMeses(1), Bimestral: somaMeses(2), Semestral: somaMeses(6) }[periodicidade];
+  return dt ? dt.toLocaleDateString('sv-SE') : null;
+}
+
+// vermelho se já passou, amarelo se faltam até 10 dias
+function dataVerificacao(data) {
+  if (!data) return '';
+  const dias = Math.round((new Date(data + 'T00:00') - new Date(new Date().toDateString())) / 864e5);
+  return h('span', { class: dias < 0 ? 'txt-vermelho' : dias <= 10 ? 'txt-amarelo' : '' }, fmtData(data));
+}
+
 async function abaProcessos(el, ctx) {
   const { os, podeEditar } = ctx;
   const linhas = await q(sb.from('processo').select('*, processo_acesso(*)').eq('os_id', os.id).order('data_abertura', { nullsFirst: false }));
@@ -315,6 +337,8 @@ async function abaProcessos(el, ctx) {
       { k: 'objetivo', rotulo: 'Assunto / objetivo', largura: 2 },
       { k: 'tipo', rotulo: 'Meio', tipo: 'opcoes', opcoes: ['Digital', 'Físico'], numerico: false },
       { k: 'verificado_em', rotulo: 'Verificado em', tipo: 'data', ajuda: 'Última vez que a situação foi conferida.' },
+      { k: 'periodicidade', rotulo: 'Verificar com que regularidade?', tipo: 'opcoes', opcoes: PERIODICIDADES, obrig: true, numerico: false, padrao: 'Nenhuma' },
+      { k: 'proxima_verificacao', rotulo: 'Próxima verificação', tipo: 'data', desativado: true, ajuda: 'Calculada automaticamente: "Verificado em" + regularidade.' },
       { k: 'situacao', rotulo: 'Situação', tipo: 'area', linhas: 3, ajuda: 'Descreva a situação atual. Aparece no link do cliente, junto com "Verificado em".' },
       { k: 'observacao', rotulo: 'Observação interna', tipo: 'area', linhas: 2 },
       { tipo: 'info', rotulo: 'Acesso ao portal (só a equipe vê; nunca aparece no link do cliente)' },
@@ -337,7 +361,10 @@ async function abaProcessos(el, ctx) {
       } : null,
     });
     // ao mudar a situação, sugere a data de hoje em "Verificado em"
-    form.ctrls.situacao.addEventListener('change', () => { form.ctrls.verificado_em.value = new Date().toLocaleDateString('sv-SE'); });
+    const atualizarProxima = () => { form.ctrls.proxima_verificacao.value = proximaVerificacao(form.ctrls.verificado_em.value, form.ctrls.periodicidade.value) || ''; };
+    form.ctrls.situacao.addEventListener('change', () => { form.ctrls.verificado_em.value = new Date().toLocaleDateString('sv-SE'); atualizarProxima(); });
+    form.ctrls.verificado_em.addEventListener('change', atualizarProxima);
+    form.ctrls.periodicidade.addEventListener('change', atualizarProxima);
     fechar = abrirJanela(p ? 'Alterar processo/documento' : 'Incluir processo/documento', form, { largo: true });
   }
 
@@ -360,6 +387,8 @@ async function abaProcessos(el, ctx) {
       { rotulo: 'Data', f: (p) => fmtData(p.data_abertura), ord: (p) => p.data_abertura },
       { rotulo: 'Assunto', k: 'objetivo', classe: 'texto' },
       { rotulo: 'Verificado em', f: (p) => fmtData(p.verificado_em), ord: (p) => p.verificado_em },
+      { rotulo: 'Regularidade', k: 'periodicidade' },
+      { rotulo: 'Próxima verificação', ord: (p) => p.proxima_verificacao, f: (p) => dataVerificacao(p.proxima_verificacao) },
       { rotulo: 'Situação', k: 'situacao', classe: 'texto', f: (p) => h('span', { class: 'pre' }, p.situacao || '') },
       { rotulo: 'Meio', k: 'tipo' },
       { rotulo: 'Portal', f: (p) => link(p.processo_acesso?.plataforma) },

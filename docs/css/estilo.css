@@ -17,6 +17,7 @@ h3 { font-size: 1rem; margin: 0; }
 .ajuda { color: var(--suave); font-size: .9rem; margin: .25rem 0 .75rem; }
 .txt-vermelho { color: var(--vermelho); font-weight: 600; }
 .txt-cinza { color: var(--suave); }
+.txt-amarelo { color: var(--amarelo); font-weight: 600; }
 .riscado { text-decoration: line-through; color: var(--suave); }
 .bloco { display: block; color: var(--suave); }
 
@@ -213,3 +214,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
 .categoria-linha { border-bottom: 1px solid var(--linha); padding: .6rem 0; }
 .categoria-linha:last-child { border-bottom: 0; }
 @media (max-width: 900px) { .busca-topo { flex-basis: 100%; padding-bottom: .5rem; } .busca-topo input { width: 100%; } }
+
+/* painel Início: filtro de situação das OS e motivos */
+.filtro-situacao { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .6rem; }
+.filtro-situacao .btn.ativo { background: var(--marca); color: #fff; border-color: var(--marca); }
+.motivos { font-size: .88rem; line-height: 1.35; }
