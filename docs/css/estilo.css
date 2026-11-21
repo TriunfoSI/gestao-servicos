@@ -277,3 +277,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
 .itens-detalhe { display: flex; flex-wrap: wrap; gap: .35rem 1.2rem; align-items: center; font-size: .85rem; }
 .item-detalhe { display: flex; gap: .4rem; align-items: center; }
 .item-detalhe .rotulo-detalhe { margin: 0; }
+/* Tarefas do Início: Situação encostada à direita, ocupando só o tamanho da etiqueta */
+.tabela-tarefas th.col-sit { width: 1%; text-align: right; white-space: nowrap; }
+.tabela-tarefas td:last-child { text-align: right; white-space: nowrap; padding-left: .2rem; }
+.tabela-tarefas tr.detalhe-os td:last-child { text-align: left; white-space: normal; }
+.tres-quadros .tabela-tarefas { table-layout: auto; }
