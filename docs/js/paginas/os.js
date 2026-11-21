@@ -4,7 +4,7 @@ import {
   eGestor, eFinanceiro, perfil,
 } from '../base.js';
 import { editarPrazo, colunasPrazo, ordenarPrazos, podeAbrirPrazo } from './prazos.js';
-import { editarAtividade, colunasCronograma } from './cronograma.js';
+import { editarAtividade, colunasCronograma, editarCronogramaEmTabela, atividadesDaOS } from './cronograma.js';
 import { editarTarefa, abrirTarefa } from './tarefas.js';
 import { abaFinanceiro } from './financeiro.js';
 
@@ -91,6 +91,21 @@ function camposDados(contatos, { tecnico = false } = {}) {
   ];
 }
 
+// link do contrato: só coordenação/diretoria e financeiro veem (tabela os_contrato, protegida no banco)
+const CAMPO_CONTRATO = { k: 'contrato_url', rotulo: 'Link do contrato no Dropbox', tipo: 'url', largura: 2,
+  ajuda: 'Só a coordenação/diretoria e o financeiro veem este link.' };
+
+function editarContrato(os, atual, depois) {
+  let fechar;
+  const form = formulario([CAMPO_CONTRATO], { contrato_url: atual }, {
+    aoSalvar: async (d) => {
+      await q(sb.from('os_contrato').upsert({ os_id: os.id, contrato_url: d.contrato_url, atualizado_em: new Date().toISOString() }));
+      aviso('Link do contrato salvo.'); fechar(); depois();
+    },
+  });
+  fechar = abrirJanela('Link do contrato', form);
+}
+
 // a subcategoria mostra só as opções da categoria escolhida
 function ligarCategoria(form) {
   const cat = form.ctrls.categoria_id, sub = form.ctrls.subcategoria_id;
@@ -120,10 +135,15 @@ async function novaOS() {
     ...camposDados([]),
     { k: 'sit_tecnica', rotulo: 'Situação técnica', tipo: 'opcoes', opcoes: SIT_TECNICA, obrig: true, numerico: false, padrao: 'Não iniciado' },
     { k: 'sit_comercial', rotulo: 'Situação comercial', tipo: 'opcoes', opcoes: SIT_COMERCIAL, obrig: true, numerico: false, padrao: 'Em aberto' },
-  ], {}, {
+    eFinanceiro() ? CAMPO_CONTRATO : null,
+  ].filter(Boolean), {}, {
     aoSalvar: async (dados) => {
+      const contrato = dados.contrato_url; delete dados.contrato_url;
       const nova = await q(sb.from('os').insert(dados).select('id').single());
-      aviso('OS criada.'); fechar(); location.hash = `#/os/${nova.id}`;
+      if (contrato) await q(sb.from('os_contrato').upsert({ os_id: nova.id, contrato_url: contrato }));
+      const { count } = await sb.from('cronograma').select('id', { count: 'exact', head: true }).eq('os_id', nova.id);
+      aviso(count ? `OS criada com um cronograma preliminar de ${count} atividades. Confira na aba Cronograma.` : 'OS criada.');
+      fechar(); location.hash = count ? `#/os/${nova.id}/cronograma` : `#/os/${nova.id}`;
     },
   });
   ligarClienteContato(form);
@@ -190,6 +210,8 @@ function alterarSituacao(os, depois) {
 // ------------------------------------------------------------------ Dados
 async function abaDados(el, { os, podeEditar, recarregar }) {
   const item = (rot, val) => val ? [h('dt', {}, rot), h('dd', {}, val)] : null;
+  const contrato = eFinanceiro() ? (await q(sb.from('os_contrato').select('contrato_url').eq('os_id', os.id).maybeSingle()))?.contrato_url : null;
+  const abrirLink = (u, txt) => /^https?:\/\//.test(u) ? h('a', { href: u, target: '_blank', rel: 'noopener' }, txt) : u;
   limpar(el, secao('Dados da OS',
     podeEditar ? botao('Editar dados', async () => {
       const contatos = await contatosDoCliente(os.cliente_id);
@@ -207,7 +229,11 @@ async function abaDados(el, { os, podeEditar, recarregar }) {
       item('Município/UF', [os.municipio, os.uf].filter(Boolean).join(' / ')), item('Código do cliente', os.codigo_cliente),
       item('Detalhe da situação técnica', os.sit_tecnica_detalhe),
       item('Situação atualizada em', fmtData(os.situacao_atualizada_em)),
-      item('Pasta no Dropbox', os.dropbox_url ? h('a', { href: os.dropbox_url, target: '_blank', rel: 'noopener' }, 'Abrir pasta') : null))));
+      item('Pasta no Dropbox', os.dropbox_url ? h('a', { href: os.dropbox_url, target: '_blank', rel: 'noopener' }, 'Abrir pasta') : null),
+      eFinanceiro() ? [h('dt', {}, 'Contrato (Dropbox)'), h('dd', {},
+        contrato ? abrirLink(contrato, 'Abrir contrato') : h('span', { class: 'txt-cinza' }, 'não informado'), ' ',
+        h('button', { class: 'btn-link', onclick: () => editarContrato(os, contrato, recarregar) }, contrato ? 'alterar' : 'incluir link'),
+        h('small', { class: 'bloco txt-cinza' }, 'Visível só para coordenação/diretoria e financeiro.'))] : null)));
 }
 
 // ------------------------------------------------------------------ Escopo
@@ -229,11 +255,27 @@ async function abaEscopo(el, { os, podeEditar }) {
 // ------------------------------------------------------------------ Cronograma
 async function abaCronograma(el, ctx) {
   const { os, podeEditar } = ctx;
-  const linhas = await q(sb.from('v_cronograma').select('*').eq('os_id', os.id).order('data_inicio', { nullsFirst: false }).order('data_termino'));
+  const linhas = await q(sb.from('v_cronograma').select('*').eq('os_id', os.id).order('data_inicio', { nullsFirst: false }).order('data_termino').order('id'));
   const recarregar = () => abaCronograma(el, ctx);
+  const preliminares = linhas.filter((a) => a.preliminar).length;
+  const gerar = async () => {
+    const n = await q(sb.rpc('gerar_cronograma_preliminar', { p_os: os.id }));
+    aviso(n ? `${n} atividades incluídas no cronograma preliminar.` : 'Nenhuma atividade do cadastro para incluir.'); recarregar();
+  };
+  const validarTudo = async () => {
+    await q(sb.from('cronograma').update({ preliminar: false }).eq('os_id', os.id).eq('preliminar', true));
+    aviso('Cronograma validado. As atividades já aparecem no link do cliente.'); recarregar();
+  };
   limpar(el, secao('Cronograma',
-    podeEditar ? botao('Incluir atividade', () => editarAtividade(null, os.id, recarregar), 'primario') : null,
-    h('p', { class: 'ajuda' }, 'Atividades com período (início e término) para cumprir o escopo técnico desta OS.'),
+    podeEditar ? botao('Editar em tabela', () => editarCronogramaEmTabela(os, linhas, recarregar), 'primario') : null,
+    podeEditar ? botao('Incluir uma atividade', () => editarAtividade(null, os.id, recarregar)) : null,
+    podeEditar && !linhas.length && atividadesDaOS(os).length ? botao('Gerar cronograma preliminar', gerar) : null,
+    h('p', { class: 'ajuda' }, 'Atividades com período (início e término) para cumprir o escopo técnico desta OS, em ordem de início. ',
+      '"Resp." mostra se a ação é da Triunfo ou do Cliente (o cliente vê isso no link dele). ',
+      'Use "Editar em tabela" para incluir várias atividades do cadastro de uma vez e ajustar as datas.'),
+    preliminares ? h('div', { class: 'alerta roxo' },
+      h('span', {}, `${preliminares} atividade(s) preliminar(es), montada(s) automaticamente pela categoria da OS. Confira as datas e valide; enquanto forem preliminares, não aparecem no link do cliente.`),
+      podeEditar ? h('button', { class: 'btn pequeno', onclick: validarTudo }, 'Validar cronograma') : null) : null,
     tabela(colunasCronograma({ comOS: false }), linhas, {
       aoClicar: (a) => (podeEditar || a.responsavel_id === st.eu.id) && editarAtividade(a, os.id, recarregar),
       vazio: 'Nenhuma atividade no cronograma.' })));
@@ -377,9 +419,20 @@ async function abaProcessos(el, ctx) {
   };
   const link = (u) => u && /^https?:\/\//.test(u) ? h('a', { href: u, target: '_blank', rel: 'noopener', onclick: (e) => e.stopPropagation() }, 'abrir portal') : (u || '');
 
+  // quem não edita a OS: abre só para consulta (inclui o acesso ao portal)
+  function ver(p) {
+    const a = p.processo_acesso || {};
+    const item = (r, v) => v ? [h('dt', {}, r), h('dd', {}, v)] : null;
+    abrirJanela(`${p.natureza || 'Processo'} ${p.referencia || ''}`, h('dl', { class: 'detalhes' },
+      item('Órgão', p.instituicao), item('Número', p.referencia), item('Data', fmtData(p.data_abertura)), item('Assunto', p.objetivo),
+      item('Meio', p.tipo), item('Verificado em', fmtData(p.verificado_em)), item('Regularidade', p.periodicidade !== 'Nenhuma' ? p.periodicidade : null),
+      item('Próxima verificação', fmtData(p.proxima_verificacao)), item('Situação', p.situacao ? h('span', { class: 'pre' }, p.situacao) : null),
+      item('Observação interna', p.observacao), item('Portal', link(a.plataforma)), item('Login', a.login), item('Senha', senhaOculta(a.senha))), { largo: true });
+  }
+
   limpar(el, secao('Processos e documentos',
     podeEditar ? botao('Incluir processo/documento', () => editar(null), 'primario') : null,
-    h('p', { class: 'ajuda' }, '"Verificado em" e "Situação" aparecem no link do cliente. Login e senha nunca aparecem.'),
+    h('p', { class: 'ajuda' }, 'Clique numa linha para ver tudo, inclusive regularidade da verificação e o acesso ao portal (login e senha). "Verificado em" e "Situação" aparecem no link do cliente; login e senha nunca aparecem.'),
     tabela([
       { rotulo: 'Tipo', k: 'natureza', f: (p) => etiqueta(p.natureza) },
       { rotulo: 'Órgão', k: 'instituicao' },
@@ -387,14 +440,9 @@ async function abaProcessos(el, ctx) {
       { rotulo: 'Data', f: (p) => fmtData(p.data_abertura), ord: (p) => p.data_abertura },
       { rotulo: 'Assunto', k: 'objetivo', classe: 'texto' },
       { rotulo: 'Verificado em', f: (p) => fmtData(p.verificado_em), ord: (p) => p.verificado_em },
-      { rotulo: 'Regularidade', k: 'periodicidade' },
       { rotulo: 'Próxima verificação', ord: (p) => p.proxima_verificacao, f: (p) => dataVerificacao(p.proxima_verificacao) },
       { rotulo: 'Situação', k: 'situacao', classe: 'texto', f: (p) => h('span', { class: 'pre' }, p.situacao || '') },
-      { rotulo: 'Meio', k: 'tipo' },
-      { rotulo: 'Portal', f: (p) => link(p.processo_acesso?.plataforma) },
-      { rotulo: 'Login', f: (p) => p.processo_acesso?.login || '' },
-      { rotulo: 'Senha', f: (p) => senhaOculta(p.processo_acesso?.senha) },
-    ], linhas, { aoClicar: podeEditar ? editar : null, vazio: 'Nenhum processo ou documento cadastrado.' })));
+    ], linhas, { aoClicar: podeEditar ? editar : ver, vazio: 'Nenhum processo ou documento cadastrado.' })));
 }
 
 // ------------------------------------------------------------------ Produtos técnicos (cadastro com link do Dropbox)

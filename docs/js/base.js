@@ -57,6 +57,7 @@ const CORES = {
   'Mais adiante': 'cinza', 'Sem data': 'cinza', 'A vencer': 'amarelo', 'Interna': 'cinza', 'Geral': 'azul',
   'Previsto': 'amarelo', 'Não iniciada': 'cinza', 'Alta': 'vermelho', 'Média': 'amarelo', 'Baixa': 'cinza',
   'Atendido': 'verde', 'Atendido fora do prazo': 'laranja', 'Apoio técnico': 'roxo', 'Processo': 'azul', 'Documento': 'roxo',
+  'Triunfo': 'azul', 'Cliente': 'laranja', 'Preliminar': 'roxo',
 };
 export const etiqueta = (txt, extra) => txt ? h('span', { class: `etq ${CORES[txt] || 'cinza'} ${extra || ''}` }, txt) : '';
 
@@ -99,6 +100,7 @@ export async function carregarListas() {
     tipo_produto_tecnico: sb.from('tipo_produto_tecnico').select('*').order('descricao'),
     os_categoria: sb.from('os_categoria').select('*').order('descricao'),
     os_subcategoria: sb.from('os_subcategoria').select('*').order('descricao'),
+    atividade_padrao: sb.from('atividade_padrao').select('*').order('ordem').order('id'),
   };
   const res = await Promise.all(Object.values(tabelas));
   Object.keys(tabelas).forEach((k, i) => { st.listas[k] = res[i].data || []; });
@@ -111,9 +113,9 @@ export const opcoesCliente = () => opcoesLista('cliente', (c) => c.nome_reduzido
 export const nomeEquipe = (id) => st.listas.equipe?.find((e) => e.id === id)?.nome || '';
 
 // ------------------------------------------------------------------ janela (modal)
-export function abrirJanela(titulo, conteudo, { largo = false } = {}) {
+export function abrirJanela(titulo, conteudo, { largo = false, extraLargo = false } = {}) {
   const fundo = h('div', { class: 'fundo-janela', onclick: (e) => { if (e.target === fundo) fechar(); } });
-  const janela = h('div', { class: 'janela' + (largo ? ' larga' : ''), role: 'dialog', 'aria-modal': 'true' },
+  const janela = h('div', { class: 'janela' + (largo ? ' larga' : '') + (extraLargo ? ' extra-larga' : ''), role: 'dialog', 'aria-modal': 'true' },
     h('div', { class: 'janela-topo' }, h('h2', {}, titulo), h('button', { class: 'btn-icone', 'aria-label': 'Fechar', onclick: () => fechar() }, '×')),
     h('div', { class: 'janela-corpo' }, conteudo));
   fundo.append(janela);
