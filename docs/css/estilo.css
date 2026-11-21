@@ -117,7 +117,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
 .cliente-linha { margin: 0; color: var(--suave); }
 .situacoes { display: flex; gap: 1rem; align-items: flex-end; background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio); padding: .6rem .9rem; flex-wrap: wrap; }
 .situacoes small { display: block; font-size: .72rem; color: var(--suave); text-transform: uppercase; }
-.abas { display: flex; gap: .15rem; border-bottom: 2px solid var(--linha); margin: 1rem 0; overflow-x: auto; }
+.abas { display: flex; gap: .15rem; border-bottom: 2px solid var(--linha); margin: 1rem 0; overflow-x: auto; overflow-y: hidden; }
 .abas a { padding: .55rem .85rem; text-decoration: none; color: var(--suave); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; font-size: .93rem; }
 .abas a.ativa { color: var(--marca); border-bottom-color: var(--marca); font-weight: 600; }
 .detalhes { display: grid; grid-template-columns: max-content 1fr; gap: .4rem 1.25rem; margin: 0; }
