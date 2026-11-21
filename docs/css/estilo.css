@@ -239,3 +239,35 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
 .tabela-edicao tr.preliminar td:first-child { border-left: 3px solid var(--roxo); }
 .editor-cronograma > label.marcar { display: flex; gap: .4rem; align-items: center; margin-top: .6rem; font-size: .9rem; }
 .editor-cronograma > label.marcar input { width: auto; }
+
+/* Início: três quadros lado a lado, cartão clicável e linhas retráteis das OS */
+.tres-quadros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.tres-quadros > .secao { margin: 0; min-width: 0; }
+.tres-quadros .caixa-rolagem { max-height: calc(100vh - 330px); min-height: 16rem; }
+.tres-quadros .tabela { font-size: .86rem; }
+.cartao.clicavel { cursor: pointer; }
+.cartao.clicavel:hover { border-color: #b9c4bf; }
+.cartao.ativo { outline: 2px solid var(--vermelho); outline-offset: -1px; }
+.seta-retratil { display: inline-block; width: .8em; color: var(--suave); }
+.tabela-os tr.detalhe-os, .tabela-os tr.detalhe-os:hover { background: var(--fundo, #f6f8f7); cursor: default; }
+.tabela-os tr.detalhe-os td { padding-top: .2rem; }
+.rotulo-detalhe { font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; color: var(--suave); margin-bottom: .2rem; }
+.abrir-os { display: inline-block; margin-top: .4rem; font-size: .85rem; }
+@media (max-width: 1100px) { .tres-quadros { grid-template-columns: 1fr; } .tres-quadros .caixa-rolagem { max-height: 28rem; } }
+.tres-quadros .tabela td.texto { min-width: 0; }
+.tres-quadros .tabela td, .tres-quadros .tabela th { padding-left: .4rem; padding-right: .4rem; }
+.tres-quadros .tabela th { font-size: .72rem; }
+.tres-quadros .tabela-rolagem { overflow-x: visible; }
+.resumo-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.cartoes.quatro { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 700px) { .cartoes.quatro { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tabela-os .motivos { overflow-wrap: anywhere; font-size: .82rem; }
+.tres-quadros .tabela-os { table-layout: fixed; }
+.tabela-os th:nth-child(1) { width: 5.6rem; }
+.tabela-os th.col-resp { width: 3.2rem; }
+.tabela-os th.col-sit { width: 8.6rem; }
+.tabela-os td { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .tabela-os tr.detalhe-os td { display: block; }
+  .tabela-os tr.detalhe-os td::before { display: none; }
+}

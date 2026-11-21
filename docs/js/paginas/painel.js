@@ -1,4 +1,4 @@
-import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, perfil } from '../base.js';
+import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, perfil, cartao } from '../base.js';
 import { abrirTarefa } from './tarefas.js';
 
 // Situação automática da OS (calculada no banco pela visão v_os_situacao):
@@ -26,6 +26,29 @@ function motivos(o) {
     itens.length > mostrar.length ? h('div', { class: 'txt-cinza' }, `+ ${itens.length - mostrar.length} outros`) : null);
 }
 
+// Tabela das OS com linhas retráteis: clicar na linha mostra/esconde "O que vence"
+function tabelaOs(oss, soMeu, vazio) {
+  if (!oss.length) return h('p', { class: 'vazio' }, vazio);
+  const ncol = soMeu ? 3 : 4;
+  const corpo = h('tbody');
+  for (const o of oss) {
+    const detalhe = h('tr', { class: 'detalhe-os', hidden: true },
+      h('td', { colSpan: ncol }, h('div', { class: 'rotulo-detalhe' }, 'O que vence'), motivos(o),
+        h('a', { href: `#/os/${o.os_id}`, class: 'abrir-os' }, 'Abrir a OS →')));
+    const seta = h('span', { class: 'seta-retratil' }, '▸');
+    const alternar = () => { detalhe.hidden = !detalhe.hidden; seta.textContent = detalhe.hidden ? '▸' : '▾'; };
+    corpo.append(h('tr', { tabIndex: 0, title: 'Clique para ver o que vence', onclick: alternar,
+      onkeydown: (e) => { if (e.key === 'Enter') alternar(); } },
+      h('td', { 'data-rotulo': 'OS', class: 'nowrap' }, seta, ' ', o.os_numero || '—'),
+      h('td', { 'data-rotulo': 'Cliente', class: 'texto' }, h('div', { class: 'resumo-3' }, o.cliente_curto || '')),
+      soMeu ? null : h('td', { 'data-rotulo': 'Resp.' }, o.responsavel_iniciais || ''),
+      h('td', { 'data-rotulo': 'Situação' }, etqSituacao(o.situacao))), detalhe);
+  }
+  return h('div', { class: 'tabela-rolagem' }, h('table', { class: 'tabela clicavel tabela-os' },
+    h('thead', {}, h('tr', {}, h('th', {}, 'OS'), h('th', {}, 'Cliente'), soMeu ? null : h('th', { class: 'col-resp' }, 'Resp.'), h('th', { class: 'col-sit' }, 'Situação'))),
+    corpo));
+}
+
 export async function paginaPainel(el) {
   const meuId = st.eu.id;
   const soMeu = perfil() === 'tecnico';
@@ -39,58 +62,64 @@ export async function paginaPainel(el) {
 
   const [oss, prazos, tarefas] = await Promise.all([q(osQ), q(prazosQ), q(tarefasQ)]);
 
-  // ------------------------------------------------ quadro 1: Ordens de Serviço
   oss.sort((a, b) => (ORDEM_SITUACAO[a.situacao] - ORDEM_SITUACAO[b.situacao])
     || String(a.data_mais_proxima || '9999').localeCompare(String(b.data_mais_proxima || '9999'))
     || String(a.os_numero).localeCompare(String(b.os_numero), 'pt-BR', { numeric: true }));
-  const conta = Object.fromEntries(SITUACOES.map(([s]) => [s, oss.filter((o) => o.situacao === s).length]));
-
-  let filtro = '';
-  const caixaOs = h('div', { class: 'caixa-rolagem' });
-  const colOs = [
-    { rotulo: 'OS', ord: (o) => o.os_numero, f: (o) => h('a', { href: `#/os/${o.os_id}`, onclick: (e) => e.stopPropagation() }, o.os_numero || '—') },
-    { rotulo: 'Cliente', k: 'cliente_curto', classe: 'texto' },
-    !soMeu && { rotulo: 'Resp.', k: 'responsavel_iniciais' },
-    { rotulo: 'Situação', ord: (o) => ORDEM_SITUACAO[o.situacao], f: (o) => etqSituacao(o.situacao) },
-    { rotulo: 'O que vence', classe: 'texto', ord: (o) => o.data_mais_proxima, f: motivos },
-  ].filter(Boolean);
-  const desenharOs = () => limpar(caixaOs, tabela(colOs, filtro ? oss.filter((o) => o.situacao === filtro) : oss,
-    { aoClicar: (o) => { location.hash = `#/os/${o.os_id}`; }, vazio: filtro ? 'Nenhuma OS nesta situação.' : 'Nenhuma OS em andamento.' }));
-  const botoesFiltro = h('div', { class: 'filtro-situacao' });
-  const desenharBotoes = () => limpar(botoesFiltro,
-    [['', `Todas (${oss.length})`], ...SITUACOES.map(([s]) => [s, `${s} (${conta[s]})`])].map(([s, txt]) =>
-      h('button', { class: 'btn pequeno' + (filtro === s ? ' ativo' : ''), onclick: () => { filtro = s; desenharBotoes(); desenharOs(); } }, txt)));
-  desenharBotoes(); desenharOs();
-
-  // ------------------------------------------------ quadro 2: Prazos
+  const comPendencia = oss.filter((o) => o.situacao === 'Pendência');
   const aVencer = prazos.filter((p) => p.situacao === 'A vencer');
   const vencidos = prazos.filter((p) => p.situacao === 'Vencido').reverse();
+  const em10dias = aVencer.filter((p) => p.dias_restantes <= 10);
+  const altas = tarefas.filter((t) => t.prioridade === 'Alta');
+
+  // ------------------------------------------------ quadro OS (com filtro pelo cartão "Pendências")
+  let soPendencia = false;
+  const caixaOs = h('div', { class: 'caixa-rolagem' });
+  const tituloOs = h('small');
+  const desenharOs = () => {
+    tituloOs.textContent = soPendencia ? ' · só com pendência' : ` · ${oss.length}`;
+    limpar(caixaOs, tabelaOs(soPendencia ? comPendencia : oss, soMeu, soPendencia ? 'Nenhuma OS com pendência.' : 'Nenhuma OS em andamento.'));
+  };
+  desenharOs();
+
+  const cartaoPendencias = cartao('Pendências', comPendencia.length, 'OS com algo vencido · clique para filtrar', comPendencia.length ? 'vermelho' : 'verde');
+  cartaoPendencias.classList.add('clicavel');
+  cartaoPendencias.title = 'Mostrar só as OS com pendência';
+  cartaoPendencias.addEventListener('click', () => {
+    soPendencia = !soPendencia; cartaoPendencias.classList.toggle('ativo', soPendencia); desenharOs();
+  });
+
+  const cartoes = h('div', { class: 'cartoes quatro' },
+    cartao(soMeu ? 'Minhas OS ativas' : 'OS ativas', oss.length, 'contrato não encerrado', 'azul', '#/os'),
+    cartao('Prazos a vencer', em10dias.length, `nos próximos 10 dias · ${vencidos.length} vencidos`, em10dias.length ? 'amarelo' : '', '#/prazos'),
+    cartaoPendencias,
+    cartao(soMeu ? 'Minhas tarefas' : 'Tarefas abertas', tarefas.length, `${altas.length} de prioridade alta`, '', '#/tarefas'),
+  );
+
+  // ------------------------------------------------ quadros Prazos e Tarefas
   const colPrazo = [
-    { rotulo: 'Data', ord: (p) => p.data_termino, f: (p) => h('span', { class: p.situacao === 'Vencido' ? 'txt-vermelho' : '' }, fmtData(p.data_termino)) },
-    { rotulo: 'OS', ord: (p) => p.os_numero, f: (p) => h('a', { href: `#/os/${p.os_id}/prazos`, onclick: (e) => e.stopPropagation() }, p.os_numero || '—') },
-    { rotulo: 'Prazo', k: 'descricao', classe: 'texto' },
-    !soMeu && { rotulo: 'Resp.', k: 'responsavel_iniciais' },
+    { rotulo: 'Data', ord: (p) => p.data_termino, f: (p) => h('span', { class: p.situacao === 'Vencido' ? 'txt-vermelho nowrap' : 'nowrap' }, fmtData(p.data_termino)) },
+    { rotulo: 'OS', ord: (p) => p.os_numero, f: (p) => h('a', { href: `#/os/${p.os_id}/prazos`, class: 'nowrap' }, p.os_numero || '—') },
+    { rotulo: 'Prazo', k: 'descricao', classe: 'texto', f: (p) => h('div', { class: 'resumo-3', title: p.descricao || '' }, p.descricao || '') },
     { rotulo: 'Situação', k: 'situacao', f: (p) => etiqueta(p.situacao) },
-  ].filter(Boolean);
+  ];
+  const colTarefa = [
+    { rotulo: 'Tarefa', k: 'descricao', classe: 'texto', f: (t) => h('div', { class: 'resumo-3', title: t.descricao || '' }, t.descricao || '') },
+    { rotulo: 'OS', k: 'os_numero', f: (t) => h('span', { class: 'nowrap' }, t.os_numero || '') },
+    { rotulo: 'Prioridade', f: (t) => etiqueta(t.prioridade), ord: (t) => t.prioridade_ordem },
+    { rotulo: 'Situação', f: (t) => etiqueta(t.situacao), k: 'situacao' },
+  ];
+  const quadro = (titulo, detalhe, href, conteudo) => h('section', { class: 'secao quadro-inicio' },
+    h('div', { class: 'secao-topo' }, h('h3', {}, titulo, detalhe), h('a', { href }, 'Ver tudo')),
+    conteudo);
 
   limpar(el,
     h('h1', {}, `Olá, ${st.eu.nome.split(' ')[0]}`),
-    h('section', { class: 'secao' },
-      h('div', { class: 'secao-topo' },
-        h('h3', {}, soMeu ? 'Minhas ordens de serviço' : 'Ordens de serviço', h('small', {}, ' · situação automática (prazos, cronograma, verificações, tarefas e parcelas atrasadas; amarelo = vence em até 10 dias)')),
-        h('a', { href: '#/os' }, 'Ver todas')),
-      botoesFiltro, caixaOs),
-    h('section', { class: 'secao' },
-      h('div', { class: 'secao-topo' }, h('h3', {}, 'Prazos ', h('small', {}, `· ${aVencer.length} a vencer, ${vencidos.length} vencidos`)), h('a', { href: '#/prazos' }, 'Ver tudo')),
-      h('div', { class: 'caixa-rolagem' }, tabela(colPrazo, [...aVencer, ...vencidos, ...prazos.filter((p) => p.situacao === 'Sem data'), ...prazos.filter((p) => p.atendido).reverse()], { vazio: 'Nenhum prazo cadastrado.' }))),
-    h('section', { class: 'secao' }, h('div', { class: 'secao-topo' }, h('h3', {}, soMeu ? 'Minhas tarefas' : 'Tarefas abertas', h('small', {}, ` · ${tarefas.length}`)), h('a', { href: '#/tarefas' }, 'Ver todas')),
-      h('div', { class: 'caixa-rolagem' }, tabela([
-        { rotulo: 'Tarefa', k: 'descricao', classe: 'texto' },
-        { rotulo: 'OS', k: 'os_numero' },
-        { rotulo: 'Prazo', f: (t) => fmtData(t.prazo), ord: (t) => t.prazo },
-        { rotulo: 'Prioridade', f: (t) => etiqueta(t.prioridade), ord: (t) => t.prioridade_ordem },
-        !soMeu && { rotulo: 'Resp.', k: 'responsavel_iniciais' },
-        { rotulo: 'Situação', f: (t) => etiqueta(t.situacao), k: 'situacao' },
-      ].filter(Boolean), tarefas, { aoClicar: (t) => abrirTarefa(t.id, () => paginaPainel(el)), vazio: 'Nenhuma tarefa aberta.' }))),
+    cartoes,
+    h('div', { class: 'tres-quadros' },
+      quadro(soMeu ? 'Minhas OS' : 'Ordens de serviço', tituloOs, '#/os', caixaOs),
+      quadro('Prazos', h('small', {}, ` · ${aVencer.length} a vencer, ${vencidos.length} vencidos`), '#/prazos',
+        h('div', { class: 'caixa-rolagem' }, tabela(colPrazo, [...aVencer, ...vencidos, ...prazos.filter((p) => p.situacao === 'Sem data')], { vazio: 'Nenhum prazo em aberto.' }))),
+      quadro(soMeu ? 'Minhas tarefas' : 'Tarefas', h('small', {}, ` · ${tarefas.length} abertas`), '#/tarefas',
+        h('div', { class: 'caixa-rolagem' }, tabela(colTarefa, tarefas, { aoClicar: (t) => abrirTarefa(t.id, () => paginaPainel(el)), vazio: 'Nenhuma tarefa aberta.' })))),
   );
 }
