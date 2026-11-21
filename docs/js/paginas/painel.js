@@ -59,6 +59,7 @@ function tabelaTarefas(tarefas, soMeu, recarregar) {
       h('td', { colSpan: 2 },
         h('div', { class: 'itens-detalhe' },
           item('OS', t.os_id ? h('a', { href: `#/os/${t.os_id}/tarefas` }, t.os_numero || '—') : 'sem OS'),
+          item('Cliente', t.cliente_curto || '—'),
           item('Prioridade', etiqueta(t.prioridade) || '—'),
           item('Prazo', t.prazo ? fmtData(t.prazo) : '—'),
           soMeu ? null : item('Resp.', t.responsavel_iniciais || '—')),
@@ -67,7 +68,7 @@ function tabelaTarefas(tarefas, soMeu, recarregar) {
     const texto = h('div', { class: 'resumo-3', title: t.descricao || '' }, t.descricao || '');
     // aberta: mostra o texto inteiro da tarefa
     const alternar = () => { detalhe.hidden = !detalhe.hidden; seta.textContent = detalhe.hidden ? '▸' : '▾'; texto.classList.toggle('resumo-3', detalhe.hidden); };
-    corpo.append(h('tr', { tabIndex: 0, title: 'Clique para ver OS e prioridade', onclick: alternar,
+    corpo.append(h('tr', { tabIndex: 0, title: 'Clique para ver OS, cliente e prioridade', onclick: alternar,
       onkeydown: (e) => { if (e.key === 'Enter') alternar(); } },
       h('td', { 'data-rotulo': 'Tarefa', class: 'texto' }, h('div', { class: 'com-seta' }, seta, texto)),
       h('td', { 'data-rotulo': 'Situação' }, etiqueta(t.situacao))), detalhe);
