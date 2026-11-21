@@ -5,7 +5,7 @@ import {
 } from '../base.js';
 import { editarPrazo, colunasPrazo, ordenarPrazos, podeAbrirPrazo } from './prazos.js';
 import { editarAtividade, colunasCronograma, editarCronogramaEmTabela, atividadesDaOS } from './cronograma.js';
-import { editarTarefa, abrirTarefa } from './tarefas.js';
+import { editarTarefa, abrirTarefa, etiquetaTarefa } from './tarefas.js';
 import { abaFinanceiro } from './financeiro.js';
 
 export const SIT_TECNICA = ['Não iniciado', 'Em andamento', 'Paralisado', 'Finalizado', 'Cancelado'];
@@ -336,7 +336,7 @@ async function abaTarefas(el, ctx) {
       { rotulo: 'Prioridade', f: (t) => etiqueta(t.prioridade), ord: (t) => t.prioridade_ordem },
       { rotulo: 'Data de criação', f: (t) => fmtData(t.data_reuniao), ord: (t) => t.data_reuniao },
       { rotulo: 'Prazo', f: (t) => fmtData(t.prazo), ord: (t) => t.prazo },
-      { rotulo: 'Situação', f: (t) => etiqueta(t.situacao), k: 'situacao' },
+      { rotulo: 'Situação', f: etiquetaTarefa, k: 'situacao' },
     ], linhas, { aoClicar: (t) => abrirTarefa(t.id, recarregar), vazio: 'Nenhuma tarefa para esta OS.' })));
 }
 

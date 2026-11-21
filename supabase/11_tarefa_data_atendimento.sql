@@ -5,6 +5,11 @@
 --     A coordenação pode corrigir a data no formulário da tarefa.
 --   - Tarefas já concluídas recebem a data em que foram marcadas como
 --     concluídas (pelo histórico) ou, sem histórico, a data da última alteração.
+--   - Situação em relação ao prazo (mesma lógica dos prazos), na coluna
+--     situacao_prazo da visão v_tarefa:
+--       Concluída               -> concluída até o prazo (ou sem prazo)
+--       Concluída fora do prazo -> concluída depois do prazo
+--       Vencida                 -> ainda aberta e o prazo já passou
 --   - Usada no Início: tarefas concluídas continuam aparecendo por 15 dias.
 -- Pode ser rodado mais de uma vez.
 -- =====================================================================
@@ -33,7 +38,17 @@ update tarefa t
          t.atualizado_em::date)
  where t.situacao = 'Concluída' and t.data_atendimento is null;
 
--- a visão precisa ser recriada para incluir a coluna nova
+create or replace function tarefa_situacao_prazo(p_situacao text, p_prazo date, p_atendimento date) returns text
+language sql stable as $$
+  select case
+    when p_situacao = 'Cancelada' then null
+    when p_situacao = 'Concluída' and p_prazo is not null and coalesce(p_atendimento, current_date) > p_prazo then 'Concluída fora do prazo'
+    when p_situacao = 'Concluída' then 'Concluída'
+    when p_prazo is not null and p_prazo < current_date then 'Vencida'
+  end
+$$;
+
+-- a visão precisa ser recriada para incluir as colunas novas
 drop view if exists v_tarefa;
 create view v_tarefa with (security_invoker = true) as
 select t.*,
@@ -43,7 +58,8 @@ select t.*,
        e.nome as responsavel_nome,
        e.iniciais as responsavel_iniciais,
        coalesce((select max(em) from tarefa_atualizacao a where a.tarefa_id = t.id), t.atualizado_em) as ultima_atualizacao,
-       case t.prioridade when 'Alta' then 1 when 'Média' then 2 else 3 end as prioridade_ordem
+       case t.prioridade when 'Alta' then 1 when 'Média' then 2 else 3 end as prioridade_ordem,
+       tarefa_situacao_prazo(t.situacao, t.prazo, t.data_atendimento) as situacao_prazo
   from tarefa t
   left join os o on o.id = t.os_id
   left join cliente c on c.id = o.cliente_id

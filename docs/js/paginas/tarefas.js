@@ -4,6 +4,13 @@ import { sb, st, h, limpar, q, aviso, tabela, etiqueta, fmtData, fmtDataHora, ed
 export const SIT_TAREFA = ['A fazer', 'Em andamento', 'Apoio técnico', 'Aguardando terceiros', 'Concluída', 'Cancelada'];
 export const PRIORIDADES = ['Alta', 'Média', 'Baixa'];
 
+// Situação da tarefa comparada ao prazo (mesma lógica dos prazos):
+// concluída mostra "Concluída" ou "Concluída fora do prazo"; aberta com prazo passado ganha "Vencida"
+export function etiquetaTarefa(t) {
+  if (t.situacao === 'Concluída') return etiqueta(t.situacao_prazo || 'Concluída');
+  return h('span', { class: 'etiquetas' }, etiqueta(t.situacao), t.situacao_prazo === 'Vencida' ? etiqueta('Vencida') : null);
+}
+
 async function opcoesOS() {
   const lista = await q(sb.from('v_os').select('id,numero,cliente_curto,titulo').neq('sit_contrato', 'Encerrado').order('id', { ascending: false }));
   return lista.map((o) => [o.id, `${o.numero || '#' + o.id} — ${o.cliente_curto} — ${(o.titulo || '').slice(0, 50)}`]);
@@ -54,7 +61,7 @@ export async function abrirTarefa(id, depois) {
       h('dt', {}, 'Prioridade'), h('dd', {}, etiqueta(t.prioridade)),
       h('dt', {}, 'Data de criação'), h('dd', {}, fmtData(t.data_reuniao) || '—'),
       h('dt', {}, 'Prazo'), h('dd', {}, fmtData(t.prazo) || '—'),
-      h('dt', {}, 'Situação'), h('dd', {}, etiqueta(t.situacao)),
+      h('dt', {}, 'Situação'), h('dd', {}, etiquetaTarefa(t)),
       t.data_atendimento ? [h('dt', {}, 'Data de atendimento'), h('dd', {}, fmtData(t.data_atendimento))] : null,
       t.orientacao_tecnica ? [h('dt', {}, 'Orientação técnica'), h('dd', { class: 'pre' }, t.orientacao_tecnica)] : null,
       t.observacao ? [h('dt', {}, 'Observação'), h('dd', { class: 'pre' }, t.observacao)] : null),
@@ -96,7 +103,7 @@ export async function paginaTarefas(el) {
       { rotulo: 'Prioridade', f: (t) => etiqueta(t.prioridade), ord: (t) => t.prioridade_ordem },
       { rotulo: 'Data de criação', f: (t) => fmtData(t.data_reuniao), ord: (t) => t.data_reuniao },
       { rotulo: 'Prazo', f: (t) => h('span', { class: t.prazo && t.prazo < hojeStr && !['Concluída', 'Cancelada'].includes(t.situacao) ? 'txt-vermelho' : '' }, fmtData(t.prazo)), ord: (t) => t.prazo },
-      { rotulo: 'Situação', f: (t) => etiqueta(t.situacao), k: 'situacao' },
+      { rotulo: 'Situação', f: etiquetaTarefa, k: 'situacao' },
       { rotulo: 'Atualizada', f: (t) => fmtData(t.ultima_atualizacao || t.atualizado_em), ord: (t) => t.ultima_atualizacao || t.atualizado_em },
     ], linhas, { aoClicar: (t) => abrirTarefa(t.id, carregar), vazio: 'Nenhuma tarefa com estes filtros.' }));
   }

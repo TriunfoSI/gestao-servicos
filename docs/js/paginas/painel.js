@@ -1,5 +1,5 @@
 import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, perfil, cartao } from '../base.js';
-import { abrirTarefa } from './tarefas.js';
+import { abrirTarefa, etiquetaTarefa } from './tarefas.js';
 
 // Situação automática da OS (calculada no banco pela visão v_os_situacao):
 //   Pendência (vermelho)       -> alguma data vencida
@@ -72,7 +72,7 @@ function tabelaTarefas(tarefas, soMeu, recarregar) {
     corpo.append(h('tr', { class: t.situacao === 'Concluída' ? 'concluida' : null, tabIndex: 0, title: 'Clique para ver OS, cliente e prioridade', onclick: alternar,
       onkeydown: (e) => { if (e.key === 'Enter') alternar(); } },
       h('td', { 'data-rotulo': 'Tarefa', class: 'texto' }, h('div', { class: 'com-seta' }, seta, texto)),
-      h('td', { 'data-rotulo': 'Situação' }, etiqueta(t.situacao))), detalhe);
+      h('td', { 'data-rotulo': 'Situação' }, etiquetaTarefa(t))), detalhe);
   }
   return h('div', { class: 'tabela-rolagem' }, h('table', { class: 'tabela clicavel tabela-os tabela-tarefas' },
     h('thead', {}, h('tr', {}, h('th', {}, 'Tarefa'), h('th', { class: 'col-sit' }, 'Situação'))),
