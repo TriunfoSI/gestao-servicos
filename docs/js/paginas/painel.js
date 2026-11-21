@@ -77,7 +77,7 @@ export async function paginaPainel(el) {
     h('h1', {}, `Olá, ${st.eu.nome.split(' ')[0]}`),
     h('section', { class: 'secao' },
       h('div', { class: 'secao-topo' },
-        h('h3', {}, soMeu ? 'Minhas ordens de serviço' : 'Ordens de serviço', h('small', {}, ' · situação automática (prazos, cronograma, verificações e tarefas; amarelo = vence em até 10 dias)')),
+        h('h3', {}, soMeu ? 'Minhas ordens de serviço' : 'Ordens de serviço', h('small', {}, ' · situação automática (prazos, cronograma, verificações, tarefas e parcelas atrasadas; amarelo = vence em até 10 dias)')),
         h('a', { href: '#/os' }, 'Ver todas')),
       botoesFiltro, caixaOs),
     h('section', { class: 'secao' },
