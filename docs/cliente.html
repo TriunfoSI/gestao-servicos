@@ -5,31 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Acompanhamento do serviço</title>
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="apple-touch-icon" href="img/icone-180.png">
   <script type="importmap">
   {
     "imports": {
-      "./config.js": "./config.js?v=202611211321",
-      "./js/app.js": "./js/app.js?v=202611211321",
-      "./js/base.js": "./js/base.js?v=202611211321",
-      "./js/paginas/busca.js": "./js/paginas/busca.js?v=202611211321",
-      "./js/paginas/cadastros.js": "./js/paginas/cadastros.js?v=202611211321",
-      "./js/paginas/clientes.js": "./js/paginas/clientes.js?v=202611211321",
-      "./js/paginas/cronograma.js": "./js/paginas/cronograma.js?v=202611211321",
-      "./js/paginas/financeiro.js": "./js/paginas/financeiro.js?v=202611211321",
-      "./js/paginas/fornecedores.js": "./js/paginas/fornecedores.js?v=202611211321",
-      "./js/paginas/os.js": "./js/paginas/os.js?v=202611211321",
-      "./js/paginas/painel.js": "./js/paginas/painel.js?v=202611211321",
-      "./js/paginas/prazos.js": "./js/paginas/prazos.js?v=202611211321",
-      "./js/paginas/tarefas.js": "./js/paginas/tarefas.js?v=202611211321"
+      "./config.js": "./config.js?v=202611211403",
+      "./js/app.js": "./js/app.js?v=202611211403",
+      "./js/base.js": "./js/base.js?v=202611211403",
+      "./js/paginas/busca.js": "./js/paginas/busca.js?v=202611211403",
+      "./js/paginas/cadastros.js": "./js/paginas/cadastros.js?v=202611211403",
+      "./js/paginas/clientes.js": "./js/paginas/clientes.js?v=202611211403",
+      "./js/paginas/cronograma.js": "./js/paginas/cronograma.js?v=202611211403",
+      "./js/paginas/financeiro.js": "./js/paginas/financeiro.js?v=202611211403",
+      "./js/paginas/fornecedores.js": "./js/paginas/fornecedores.js?v=202611211403",
+      "./js/paginas/os.js": "./js/paginas/os.js?v=202611211403",
+      "./js/paginas/painel.js": "./js/paginas/painel.js?v=202611211403",
+      "./js/paginas/prazos.js": "./js/paginas/prazos.js?v=202611211403",
+      "./js/paginas/tarefas.js": "./js/paginas/tarefas.js?v=202611211403"
     }
   }
   </script>
-  <link rel="stylesheet" href="css/estilo.css?v=202611211321">
+  <link rel="stylesheet" href="css/estilo.css?v=202611211403">
   <style>
     .rel { max-width: 960px; margin: 0 auto; padding: 1.25rem; }
     .rel-topo { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; border-bottom: 3px solid var(--marca); padding-bottom: .75rem; margin-bottom: 1rem; }
     .rel-topo .marca { color: var(--marca); }
-    .rel-topo .marca .marca-icone { background: var(--marca); color: #fff; }
+    .rel-topo .marca-logo { height: 46px; }
+    .rel-topo .marca-nome { border-left: 1px solid var(--linha); padding-left: .7rem; }
     .rel h1 { margin: .25rem 0; }
     .rodape { color: var(--suave); font-size: .82rem; text-align: center; margin: 2rem 0 1rem; }
   </style>
@@ -67,7 +70,7 @@
       document.title = `OS ${o.numero || ''} — acompanhamento`;
       const totais = r.financeiro.reduce((a, p) => { a.t += Number(p.valor); if (p.situacao === 'Pago') a.p += Number(p.valor); return a; }, { t: 0, p: 0 });
       raiz.replaceChildren(...[
-        h('div', { class: 'rel-topo' }, h('div', { class: 'marca' }, h('span', { class: 'marca-icone' }, 'OS'), h('span', {}, 'Acompanhamento do serviço')),
+        h('div', { class: 'rel-topo' }, h('div', { class: 'marca' }, h('img', { class: 'marca-logo', src: 'img/logo-triunfo-verde.png', alt: 'Triunfo Engenharia Ambiental' }), h('span', { class: 'marca-nome' }, 'Acompanhamento do serviço')),
           h('button', { class: 'btn pequeno', onclick: () => print() }, 'Imprimir / salvar PDF')),
         h('p', { class: 'cliente-linha' }, o.cliente),
         h('h1', {}, `OS ${o.numero || ''}`), h('p', { class: 'subtitulo' }, o.titulo),

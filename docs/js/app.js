@@ -45,7 +45,7 @@ function menu() {
     if (location.hash === destino) navegar(); else location.hash = destino;
   } }, termo);
   return h('header', { class: 'topo' },
-    h('a', { class: 'marca', href: '#/' }, h('span', { class: 'marca-icone' }, 'OS'), h('span', {}, 'Gestão de Serviços')),
+    h('a', { class: 'marca', href: '#/', title: 'Início' }, h('img', { class: 'marca-logo', src: 'img/logo-triunfo-branca.png', alt: 'Triunfo Engenharia Ambiental' }), h('span', { class: 'marca-nome' }, 'Gestão de Serviços')),
     h('button', { class: 'btn-icone menu-botao', 'aria-label': 'Menu', onclick: () => nav.classList.toggle('aberto') }, '☰'),
     nav, busca,
     h('div', { class: 'usuario' },
@@ -109,7 +109,7 @@ function telaLogin(msg) {
       }
     } catch (err) { status.textContent = traduzErro(err); } finally { btn.disabled = false; }
   } },
-    h('div', { class: 'marca grande' }, h('span', { class: 'marca-icone' }, 'OS'), h('span', {}, 'Gestão de Serviços')),
+    h('div', { class: 'marca grande' }, h('img', { class: 'marca-logo', src: 'img/logo-triunfo-verde.png', alt: 'Triunfo Engenharia Ambiental' }), h('span', { class: 'marca-nome' }, 'Gestão de Serviços')),
     titulo,
     h('label', { class: 'campo' }, h('span', {}, 'E-mail'), email),
     h('label', { class: 'campo' }, h('span', {}, 'Senha'), senha),
