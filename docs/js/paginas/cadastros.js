@@ -51,6 +51,55 @@ export async function paginaCadastros(el, aba) {
         h('li', {}, h('button', { class: 'btn pequeno', onclick: () => editarSub(null, c.id) }, '+ subcategoria')))))
       : h('p', { class: 'vazio' }, 'Nenhuma categoria cadastrada.'));
 
+  // ---------------------------------------------------------------- atividades do cronograma
+  const ativs = await q(sb.from('atividade_padrao').select('*').order('ordem').order('id'));
+  const nomeSub = (id) => subs.find((c) => c.id === id)?.descricao;
+  const editarAtiv = (r, categoriaId) => {
+    const form = editarRegistro({ titulo: 'atividade do cronograma', tabela: 'atividade_padrao', registro: r, depois: recarregar,
+      campos: [
+        { k: 'descricao', rotulo: 'Atividade', obrig: true, largura: 2 },
+        { k: 'categoria_id', rotulo: 'Categoria da OS', tipo: 'opcoes', opcoes: cats.map((c) => [c.id, c.descricao]), padrao: categoriaId,
+          ajuda: '"Geral" = entra no cronograma de todas as OS.' },
+        { k: 'subcategoria_id', rotulo: 'Subcategoria (opcional)', tipo: 'opcoes', opcoes: subs.map((c) => [c.id, c.descricao]),
+          ajuda: 'Deixe em branco para valer para a categoria toda.' },
+        { k: 'responsavel', rotulo: 'Responsável', tipo: 'opcoes', opcoes: ['Triunfo', 'Cliente'], obrig: true, numerico: false, padrao: 'Triunfo' },
+        { k: 'duracao_dias', rotulo: 'Duração (dias úteis)', tipo: 'numero', obrig: true, padrao: 5 },
+        { k: 'ordem', rotulo: 'Ordem no cronograma', tipo: 'numero', obrig: true, padrao: categoriaId ? 500 : 50,
+          ajuda: 'Número menor vem antes. Sugestão: Gerais do começo 10–90, da categoria 100–800, Gerais do fim 900–990.' },
+        { k: 'ativo', rotulo: 'Ativa', tipo: 'marcar', padrao: true },
+      ] });
+    // "Geral" no lugar do traço; subcategoria só da categoria escolhida
+    const cat = form.ctrls.categoria_id, sub = form.ctrls.subcategoria_id;
+    cat.options[0].textContent = 'Geral (todas as OS)';
+    const atualizar = () => {
+      const atual = sub.value;
+      limpar(sub, h('option', { value: '' }, cat.value ? 'Toda a categoria' : '—'),
+        subs.filter((x) => String(x.categoria_id) === cat.value).map((x) => h('option', { value: x.id }, x.descricao)));
+      sub.value = [...sub.options].some((o) => o.value === atual) ? atual : '';
+      sub.disabled = !cat.value;
+    };
+    cat.addEventListener('change', atualizar); atualizar();
+    return form;
+  };
+  const grupos = [[null, 'Geral (todas as OS)'], ...cats.map((c) => [c.id, c.descricao])];
+  const secaoAtividades = h('details', { class: 'secao recolhivel', open: true },
+    h('summary', {}, 'Atividades do cronograma ', h('span', { class: 'contador' }, ativs.length)),
+    h('p', { class: 'ajuda' }, 'Quando a OS recebe uma categoria, o sistema monta um cronograma preliminar com as atividades Gerais + as da categoria (e da subcategoria), na ordem abaixo e com a duração informada. Depois o técnico confere e valida. Clique numa atividade para alterar.'),
+    grupos.map(([cid, titulo]) => {
+      const lista = ativs.filter((a) => (a.categoria_id ?? null) === cid);
+      if (cid && !lista.length && !cats.find((c) => c.id === cid)?.ativo) return null;
+      return h('div', { class: 'categoria-linha' },
+        h('div', { class: 'secao-topo' }, h('strong', {}, titulo), h('button', { class: 'btn pequeno', onclick: () => editarAtiv(null, cid) }, '+ atividade')),
+        lista.length ? tabela([
+          { rotulo: 'Ordem', k: 'ordem' },
+          { rotulo: 'Atividade', k: 'descricao', classe: 'texto' },
+          cid ? { rotulo: 'Subcategoria', f: (a) => nomeSub(a.subcategoria_id) || 'Toda a categoria' } : null,
+          { rotulo: 'Resp.', f: (a) => etiqueta(a.responsavel), k: 'responsavel' },
+          { rotulo: 'Duração', f: (a) => `${a.duracao_dias} dia(s) útil(eis)`, ord: (a) => a.duracao_dias },
+          { rotulo: 'Ativa', f: (a) => a.ativo ? 'Sim' : 'Não' },
+        ].filter(Boolean), lista, { aoClicar: (a) => editarAtiv(a, a.categoria_id) }) : h('p', { class: 'vazio' }, 'Nenhuma atividade.'));
+    }));
+
   limpar(el, h('h1', {}, 'Cadastros'),
     secao('Equipe e acessos', botao('Incluir pessoa', () => editarRegistro({ titulo: 'pessoa da equipe', tabela: 'equipe', campos: camposEquipe, depois: recarregar, podeExcluir: false }), 'primario'),
       h('p', { class: 'ajuda' }, 'Para liberar o acesso: cadastre o e-mail e o perfil. A pessoa entra no sistema, clica em "Primeiro acesso" e cria a senha. Para bloquear, desmarque "Ativo" ou tire o perfil.'),
@@ -61,6 +110,7 @@ export async function paginaCadastros(el, aba) {
         { rotulo: 'Ativo', f: (e) => e.ativo ? 'Sim' : 'Não' },
       ], equipe, { aoClicar: (r) => editarRegistro({ titulo: 'pessoa da equipe', tabela: 'equipe', campos: camposEquipe, registro: r, depois: recarregar, podeExcluir: false }) })),
     secaoCategorias,
+    secaoAtividades,
     LISTAS.map(([t, titulo, campos], i) => h('details', { class: 'secao recolhivel' }, h('summary', {}, titulo, ' ', h('span', { class: 'contador' }, listas[i].length)),
       h('div', { class: 'acoes esquerda' }, botao('Incluir', () => editarRegistro({ titulo: 'item', tabela: t, campos: [...campos, { k: 'ativo', rotulo: 'Ativo', tipo: 'marcar', padrao: true }], depois: recarregar }))),
       tabela([...campos.map((c) => ({ rotulo: c.rotulo, k: c.k, classe: 'texto' })), { rotulo: 'Ativo', f: (r) => r.ativo === false ? 'Não' : 'Sim' }], listas[i],
