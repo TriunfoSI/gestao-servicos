@@ -21,6 +21,7 @@ export async function editarTarefa(registro, depois, osId) {
       { k: 'data_reuniao', rotulo: 'Data de criação', tipo: 'data', padrao: new Date().toLocaleDateString('sv-SE') },
       { k: 'prazo', rotulo: 'Prazo', tipo: 'data' },
       { k: 'situacao', rotulo: 'Situação', tipo: 'opcoes', opcoes: SIT_TAREFA, obrig: true, numerico: false, padrao: 'A fazer' },
+      { k: 'data_atendimento', rotulo: 'Data de atendimento', tipo: 'data', ajuda: 'Preenchida sozinha quando a tarefa é concluída. Pode ser corrigida aqui.' },
       { k: 'orientacao_tecnica', rotulo: 'Orientação técnica', tipo: 'area', linhas: 4, ajuda: 'Orientação da coordenação para o técnico executar a tarefa.' },
       { k: 'observacao', rotulo: 'Observação', tipo: 'area', linhas: 2 },
     ].filter(Boolean) });
@@ -54,6 +55,7 @@ export async function abrirTarefa(id, depois) {
       h('dt', {}, 'Data de criação'), h('dd', {}, fmtData(t.data_reuniao) || '—'),
       h('dt', {}, 'Prazo'), h('dd', {}, fmtData(t.prazo) || '—'),
       h('dt', {}, 'Situação'), h('dd', {}, etiqueta(t.situacao)),
+      t.data_atendimento ? [h('dt', {}, 'Data de atendimento'), h('dd', {}, fmtData(t.data_atendimento))] : null,
       t.orientacao_tecnica ? [h('dt', {}, 'Orientação técnica'), h('dd', { class: 'pre' }, t.orientacao_tecnica)] : null,
       t.observacao ? [h('dt', {}, 'Observação'), h('dd', { class: 'pre' }, t.observacao)] : null),
     eGestor() ? h('div', { class: 'acoes esquerda' }, botao('Editar tarefa', () => { fechar(); editarTarefa(t, depois); })) : null,
