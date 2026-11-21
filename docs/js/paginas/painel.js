@@ -49,6 +49,34 @@ function tabelaOs(oss, soMeu, vazio) {
     corpo));
 }
 
+// Tabela das tarefas com linhas retráteis: só Tarefa e Situação; clicar mostra OS, prioridade e prazo
+function tabelaTarefas(tarefas, soMeu, recarregar) {
+  if (!tarefas.length) return h('p', { class: 'vazio' }, 'Nenhuma tarefa aberta.');
+  const corpo = h('tbody');
+  const item = (rotulo, valor) => h('div', { class: 'item-detalhe' }, h('span', { class: 'rotulo-detalhe' }, rotulo), valor);
+  for (const t of tarefas) {
+    const detalhe = h('tr', { class: 'detalhe-os', hidden: true },
+      h('td', { colSpan: 2 },
+        h('div', { class: 'itens-detalhe' },
+          item('OS', t.os_id ? h('a', { href: `#/os/${t.os_id}/tarefas` }, t.os_numero || '—') : 'sem OS'),
+          item('Prioridade', etiqueta(t.prioridade) || '—'),
+          item('Prazo', t.prazo ? fmtData(t.prazo) : '—'),
+          soMeu ? null : item('Resp.', t.responsavel_iniciais || '—')),
+        h('a', { href: '#/', class: 'abrir-os', onclick: (e) => { e.preventDefault(); abrirTarefa(t.id, recarregar); } }, 'Abrir a tarefa →')));
+    const seta = h('span', { class: 'seta-retratil' }, '▸');
+    const texto = h('div', { class: 'resumo-3', title: t.descricao || '' }, t.descricao || '');
+    // aberta: mostra o texto inteiro da tarefa
+    const alternar = () => { detalhe.hidden = !detalhe.hidden; seta.textContent = detalhe.hidden ? '▸' : '▾'; texto.classList.toggle('resumo-3', detalhe.hidden); };
+    corpo.append(h('tr', { tabIndex: 0, title: 'Clique para ver OS e prioridade', onclick: alternar,
+      onkeydown: (e) => { if (e.key === 'Enter') alternar(); } },
+      h('td', { 'data-rotulo': 'Tarefa', class: 'texto' }, h('div', { class: 'com-seta' }, seta, texto)),
+      h('td', { 'data-rotulo': 'Situação' }, etiqueta(t.situacao))), detalhe);
+  }
+  return h('div', { class: 'tabela-rolagem' }, h('table', { class: 'tabela clicavel tabela-os tabela-tarefas' },
+    h('thead', {}, h('tr', {}, h('th', {}, 'Tarefa'), h('th', { class: 'col-sit' }, 'Situação'))),
+    corpo));
+}
+
 export async function paginaPainel(el) {
   const meuId = st.eu.id;
   const soMeu = perfil() === 'tecnico';
@@ -102,12 +130,6 @@ export async function paginaPainel(el) {
     { rotulo: 'Prazo', k: 'descricao', classe: 'texto', f: (p) => h('div', { class: 'resumo-3', title: p.descricao || '' }, p.descricao || '') },
     { rotulo: 'Situação', k: 'situacao', f: (p) => etiqueta(p.situacao) },
   ];
-  const colTarefa = [
-    { rotulo: 'Tarefa', k: 'descricao', classe: 'texto', f: (t) => h('div', { class: 'resumo-3', title: t.descricao || '' }, t.descricao || '') },
-    { rotulo: 'OS', k: 'os_numero', f: (t) => h('span', { class: 'nowrap' }, t.os_numero || '') },
-    { rotulo: 'Prioridade', f: (t) => etiqueta(t.prioridade), ord: (t) => t.prioridade_ordem },
-    { rotulo: 'Situação', f: (t) => etiqueta(t.situacao), k: 'situacao' },
-  ];
   const quadro = (titulo, detalhe, href, conteudo) => h('section', { class: 'secao quadro-inicio' },
     h('div', { class: 'secao-topo' }, h('h3', {}, titulo, detalhe), h('a', { href }, 'Ver tudo')),
     conteudo);
@@ -120,6 +142,6 @@ export async function paginaPainel(el) {
       quadro('Prazos', h('small', {}, ` · ${aVencer.length} a vencer, ${vencidos.length} vencidos`), '#/prazos',
         h('div', { class: 'caixa-rolagem' }, tabela(colPrazo, [...aVencer, ...vencidos, ...prazos.filter((p) => p.situacao === 'Sem data')], { vazio: 'Nenhum prazo em aberto.' }))),
       quadro(soMeu ? 'Minhas tarefas' : 'Tarefas', h('small', {}, ` · ${tarefas.length} abertas`), '#/tarefas',
-        h('div', { class: 'caixa-rolagem' }, tabela(colTarefa, tarefas, { aoClicar: (t) => abrirTarefa(t.id, () => paginaPainel(el)), vazio: 'Nenhuma tarefa aberta.' })))),
+        h('div', { class: 'caixa-rolagem' }, tabelaTarefas(tarefas, soMeu, () => paginaPainel(el))))),
   );
 }
