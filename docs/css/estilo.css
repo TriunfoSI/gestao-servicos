@@ -271,3 +271,9 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
   .tabela-os tr.detalhe-os td { display: block; }
   .tabela-os tr.detalhe-os td::before { display: none; }
 }
+.tabela-tarefas th:nth-child(1) { width: auto; }
+.tabela-tarefas th.col-sit { width: 9.5rem; }
+.com-seta { display: flex; gap: .3rem; align-items: flex-start; }
+.itens-detalhe { display: flex; flex-wrap: wrap; gap: .35rem 1.2rem; align-items: center; font-size: .85rem; }
+.item-detalhe { display: flex; gap: .4rem; align-items: center; }
+.item-detalhe .rotulo-detalhe { margin: 0; }
