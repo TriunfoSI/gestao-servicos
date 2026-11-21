@@ -1,5 +1,5 @@
 import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, perfil, cartao } from '../base.js';
-import { abrirTarefa } from './tarefas.js';
+import { abrirTarefa, etiquetaTarefa } from './tarefas.js';
 
 // Situação automática da OS (calculada no banco pela visão v_os_situacao):
 //   Pendência (vermelho)       -> alguma data vencida
@@ -51,7 +51,7 @@ function tabelaOs(oss, soMeu, vazio) {
 
 // Tabela das tarefas com linhas retráteis: só Tarefa e Situação; clicar mostra OS, prioridade e prazo
 function tabelaTarefas(tarefas, soMeu, recarregar) {
-  if (!tarefas.length) return h('p', { class: 'vazio' }, 'Nenhuma tarefa aberta.');
+  if (!tarefas.length) return h('p', { class: 'vazio' }, 'Nenhuma tarefa aberta ou concluída nos últimos 15 dias.');
   const corpo = h('tbody');
   const item = (rotulo, valor) => h('div', { class: 'item-detalhe' }, h('span', { class: 'rotulo-detalhe' }, rotulo), valor);
   for (const t of tarefas) {
@@ -62,16 +62,17 @@ function tabelaTarefas(tarefas, soMeu, recarregar) {
           item('Cliente', t.cliente_curto || '—'),
           item('Prioridade', etiqueta(t.prioridade) || '—'),
           item('Prazo', t.prazo ? fmtData(t.prazo) : '—'),
+          item('Atendida em', t.data_atendimento ? fmtData(t.data_atendimento) : '—'),
           soMeu ? null : item('Resp.', t.responsavel_iniciais || '—')),
         h('a', { href: '#/', class: 'abrir-os', onclick: (e) => { e.preventDefault(); abrirTarefa(t.id, recarregar); } }, 'Abrir a tarefa →')));
     const seta = h('span', { class: 'seta-retratil' }, '▸');
     const texto = h('div', { class: 'resumo-3', title: t.descricao || '' }, t.descricao || '');
     // aberta: mostra o texto inteiro da tarefa
     const alternar = () => { detalhe.hidden = !detalhe.hidden; seta.textContent = detalhe.hidden ? '▸' : '▾'; texto.classList.toggle('resumo-3', detalhe.hidden); };
-    corpo.append(h('tr', { tabIndex: 0, title: 'Clique para ver OS, cliente e prioridade', onclick: alternar,
+    corpo.append(h('tr', { class: t.situacao === 'Concluída' ? 'concluida' : null, tabIndex: 0, title: 'Clique para ver OS, cliente e prioridade', onclick: alternar,
       onkeydown: (e) => { if (e.key === 'Enter') alternar(); } },
       h('td', { 'data-rotulo': 'Tarefa', class: 'texto' }, h('div', { class: 'com-seta' }, seta, texto)),
-      h('td', { 'data-rotulo': 'Situação' }, etiqueta(t.situacao))), detalhe);
+      h('td', { 'data-rotulo': 'Situação' }, etiquetaTarefa(t))), detalhe);
   }
   return h('div', { class: 'tabela-rolagem' }, h('table', { class: 'tabela clicavel tabela-os tabela-tarefas' },
     h('thead', {}, h('tr', {}, h('th', {}, 'Tarefa'), h('th', { class: 'col-sit' }, 'Situação'))),
@@ -86,10 +87,17 @@ export async function paginaPainel(el) {
   if (soMeu) osQ = osQ.eq('responsavel_id', meuId);
   let prazosQ = sb.from('v_prazo').select('*').order('data_termino', { nullsFirst: false });
   if (soMeu) prazosQ = prazosQ.eq('responsavel_id', meuId);
-  let tarefasQ = sb.from('v_tarefa').select('*').not('situacao', 'in', '("Concluída","Cancelada")').order('prioridade_ordem').order('prazo', { nullsFirst: false });
+  // tarefas abertas + concluídas nos últimos 15 dias (para a reunião semanal)
+  const ha15dias = new Date(Date.now() - 15 * 864e5).toLocaleDateString('sv-SE');
+  let tarefasQ = sb.from('v_tarefa').select('*').neq('situacao', 'Cancelada')
+    .or(`situacao.neq.Concluída,data_atendimento.gte.${ha15dias}`)
+    .order('prioridade_ordem').order('prazo', { nullsFirst: false });
   if (soMeu) tarefasQ = tarefasQ.eq('responsavel_id', meuId);
 
-  const [oss, prazos, tarefas] = await Promise.all([q(osQ), q(prazosQ), q(tarefasQ)]);
+  const [oss, prazos, todasTarefas] = await Promise.all([q(osQ), q(prazosQ), q(tarefasQ)]);
+  const tarefas = todasTarefas.filter((t) => t.situacao !== 'Concluída');
+  const concluidas = todasTarefas.filter((t) => t.situacao === 'Concluída')
+    .sort((a, b) => String(b.data_atendimento).localeCompare(String(a.data_atendimento)));
 
   oss.sort((a, b) => (ORDEM_SITUACAO[a.situacao] - ORDEM_SITUACAO[b.situacao])
     || String(a.data_mais_proxima || '9999').localeCompare(String(b.data_mais_proxima || '9999'))
@@ -142,7 +150,7 @@ export async function paginaPainel(el) {
       quadro(soMeu ? 'Minhas OS' : 'Ordens de serviço', tituloOs, '#/os', caixaOs),
       quadro('Prazos', h('small', {}, ` · ${aVencer.length} a vencer, ${vencidos.length} vencidos`), '#/prazos',
         h('div', { class: 'caixa-rolagem' }, tabela(colPrazo, [...aVencer, ...vencidos, ...prazos.filter((p) => p.situacao === 'Sem data')], { vazio: 'Nenhum prazo em aberto.' }))),
-      quadro(soMeu ? 'Minhas tarefas' : 'Tarefas', h('small', {}, ` · ${tarefas.length} abertas`), '#/tarefas',
-        h('div', { class: 'caixa-rolagem' }, tabelaTarefas(tarefas, soMeu, () => paginaPainel(el))))),
+      quadro(soMeu ? 'Minhas tarefas' : 'Tarefas', h('small', {}, ` · ${tarefas.length} abertas, ${concluidas.length} concluídas (15 dias)`), '#/tarefas',
+        h('div', { class: 'caixa-rolagem' }, tabelaTarefas([...tarefas, ...concluidas], soMeu, () => paginaPainel(el))))),
   );
 }

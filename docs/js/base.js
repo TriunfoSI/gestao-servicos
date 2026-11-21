@@ -57,6 +57,7 @@ const CORES = {
   'Mais adiante': 'cinza', 'Sem data': 'cinza', 'A vencer': 'amarelo', 'Interna': 'cinza', 'Geral': 'azul',
   'Previsto': 'amarelo', 'Não iniciada': 'cinza', 'Alta': 'vermelho', 'Média': 'amarelo', 'Baixa': 'cinza',
   'Atendido': 'verde', 'Atendido fora do prazo': 'laranja', 'Apoio técnico': 'roxo', 'Processo': 'azul', 'Documento': 'roxo',
+  'Concluída fora do prazo': 'laranja', 'Vencida': 'vermelho',
   'Triunfo': 'azul', 'Cliente': 'laranja', 'Preliminar': 'roxo',
 };
 export const etiqueta = (txt, extra) => txt ? h('span', { class: `etq ${CORES[txt] || 'cinza'} ${extra || ''}` }, txt) : '';

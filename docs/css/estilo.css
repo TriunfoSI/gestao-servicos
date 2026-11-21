@@ -282,3 +282,5 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
 .tabela-tarefas td:last-child { text-align: right; white-space: nowrap; padding-left: .2rem; }
 .tabela-tarefas tr.detalhe-os td:last-child { text-align: left; white-space: normal; }
 .tres-quadros .tabela-tarefas { table-layout: auto; }
+.tabela-tarefas tr.concluida td { color: var(--suave); }
+.etiquetas { display: inline-flex; flex-wrap: wrap; gap: .2rem; justify-content: flex-end; }
