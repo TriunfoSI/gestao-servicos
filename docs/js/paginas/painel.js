@@ -2,13 +2,18 @@ import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, perfil, cartao } from 
 import { abrirTarefa, etiquetaTarefa } from './tarefas.js';
 
 // Situação automática da OS (calculada no banco pela visão v_os_situacao):
-//   Pendência (vermelho)       -> alguma data vencida
+//   Pendência (vermelho)       -> algo técnico vencido (prazo, cronograma, verificação, tarefa, ART)
+//   Pendência Comercial (laranja) -> só parcela de pagamento vencida
 //   Prazos a vencer (amarelo)  -> algo vence em até 10 dias
 //   Em conformidade (verde)    -> nada vencido nem vencendo em 10 dias
+//   Paralisado (cinza)         -> contrato paralisado (fica no fim da lista)
+// OS encerrada com ART ainda não baixada aparece como Pendência.
 const SITUACOES = [
   ['Pendência', 'vermelho'],
+  ['Pendência Comercial', 'laranja'],
   ['Prazos a vencer', 'amarelo'],
   ['Em conformidade', 'verde'],
+  ['Paralisado', 'cinza'],
 ];
 const COR_SITUACAO = Object.fromEntries(SITUACOES);
 const ORDEM_SITUACAO = Object.fromEntries(SITUACOES.map(([s], i) => [s, i]));
@@ -17,9 +22,10 @@ const etqSituacao = (s) => h('span', { class: `etq ${COR_SITUACAO[s] || 'cinza'}
 // lista curta dos itens que explicam a situação (vencidos primeiro)
 function motivos(o) {
   const itens = [...(o.itens || [])].sort((a, b) => (a.estado === b.estado ? 0 : a.estado === 'Vencido' ? -1 : 1));
-  if (!itens.length) return h('span', { class: 'txt-cinza' }, 'Nenhuma data vencida ou vencendo em 10 dias');
+  const aviso = o.situacao === 'Paralisado' ? h('div', { class: 'txt-cinza' }, 'Contrato paralisado.') : null;
+  if (!itens.length) return aviso || h('span', { class: 'txt-cinza' }, 'Nenhuma data vencida ou vencendo em 10 dias');
   const mostrar = itens.slice(0, 3);
-  return h('div', { class: 'motivos' },
+  return h('div', { class: 'motivos' }, aviso,
     mostrar.map((i) => h('div', {},
       h('span', { class: i.estado === 'Vencido' ? 'txt-vermelho' : 'txt-amarelo' }, fmtData(i.data)), ' · ',
       h('b', {}, i.origem), ': ', i.descricao || '')),
@@ -102,7 +108,10 @@ export async function paginaPainel(el) {
   oss.sort((a, b) => (ORDEM_SITUACAO[a.situacao] - ORDEM_SITUACAO[b.situacao])
     || String(a.data_mais_proxima || '9999').localeCompare(String(b.data_mais_proxima || '9999'))
     || String(a.os_numero).localeCompare(String(b.os_numero), 'pt-BR', { numeric: true }));
-  const comPendencia = oss.filter((o) => o.situacao === 'Pendência');
+  const comPendencia = oss.filter((o) => o.situacao === 'Pendência' || o.situacao === 'Pendência Comercial');
+  const pendComercial = comPendencia.filter((o) => o.situacao === 'Pendência Comercial').length;
+  const ativas = oss.filter((o) => o.sit_contrato !== 'Encerrado');   // encerradas só aparecem se a ART não foi baixada
+  const paralisadas = oss.filter((o) => o.situacao === 'Paralisado');
   const aVencer = prazos.filter((p) => p.situacao === 'A vencer');
   const vencidos = prazos.filter((p) => p.situacao === 'Vencido').reverse();
   const em10dias = aVencer.filter((p) => p.dias_restantes <= 10);
@@ -118,7 +127,7 @@ export async function paginaPainel(el) {
   };
   desenharOs();
 
-  const cartaoPendencias = cartao('Pendências', comPendencia.length, 'OS com algo vencido · clique para filtrar', comPendencia.length ? 'vermelho' : 'verde');
+  const cartaoPendencias = cartao('Pendências', comPendencia.length, `${comPendencia.length - pendComercial} técnicas · ${pendComercial} comerciais · clique para filtrar`, comPendencia.length ? 'vermelho' : 'verde');
   cartaoPendencias.classList.add('clicavel');
   cartaoPendencias.title = 'Mostrar só as OS com pendência';
   cartaoPendencias.addEventListener('click', () => {
@@ -126,7 +135,7 @@ export async function paginaPainel(el) {
   });
 
   const cartoes = h('div', { class: 'cartoes quatro' },
-    cartao(soMeu ? 'Minhas OS ativas' : 'OS ativas', oss.length, 'contrato não encerrado', 'azul', '#/os'),
+    cartao(soMeu ? 'Minhas OS ativas' : 'OS ativas', ativas.length, `contrato não encerrado · ${paralisadas.length} paralisadas`, 'azul', '#/os'),
     cartao('Prazos a vencer', em10dias.length, `nos próximos 10 dias · ${vencidos.length} vencidos`, em10dias.length ? 'amarelo' : '', '#/prazos'),
     cartaoPendencias,
     cartao(soMeu ? 'Minhas tarefas' : 'Tarefas abertas', tarefas.length, `${altas.length} de prioridade alta`, '', '#/tarefas'),
@@ -136,7 +145,7 @@ export async function paginaPainel(el) {
   const colPrazo = [
     { rotulo: 'Data', ord: (p) => p.data_termino, f: (p) => h('span', { class: p.situacao === 'Vencido' ? 'txt-vermelho nowrap' : 'nowrap' }, fmtData(p.data_termino)) },
     { rotulo: 'OS', ord: (p) => p.os_numero, f: (p) => h('a', { href: `#/os/${p.os_id}/prazos`, class: 'nowrap' }, p.os_numero || '—') },
-    { rotulo: 'Prazo', k: 'descricao', classe: 'texto', f: (p) => h('div', { class: 'resumo-3', title: p.descricao || '' }, p.descricao || '') },
+    { rotulo: 'Descrição', k: 'descricao', classe: 'texto', f: (p) => h('div', { class: 'resumo-3', title: p.descricao || '' }, p.descricao || '') },
     { rotulo: 'Situação', k: 'situacao', f: (p) => etiqueta(p.situacao) },
   ];
   const quadro = (titulo, detalhe, href, conteudo) => h('section', { class: 'secao quadro-inicio' },

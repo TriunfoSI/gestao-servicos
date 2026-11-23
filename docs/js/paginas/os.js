@@ -162,6 +162,9 @@ export async function paginaOS(el, id, aba = 'dados') {
   const os = await q(sb.from('v_os').select('*').eq('id', id).maybeSingle());
   if (!os) { limpar(el, h('div', { class: 'alerta erro' }, 'OS não encontrada ou sem permissão de acesso.')); return; }
   const podeEditar = eGestor() || os.responsavel_id === st.eu.id;
+  // serviço terminado (técnico e comercial) com ART não baixada = pendência
+  const artsPendentes = os.sit_contrato === 'Encerrado'
+    ? await q(sb.from('processo').select('referencia').eq('os_id', id).eq('natureza', 'ART').eq('art_baixada', false)) : [];
   const ctx = { os, podeEditar, recarregar: () => paginaOS(el, id, aba) };
   const corpo = h('div', { class: 'aba-corpo' });
 
@@ -176,6 +179,10 @@ export async function paginaOS(el, id, aba = 'dados') {
         h('div', {}, h('small', {}, 'Comercial'), etiqueta(os.sit_comercial)),
         h('div', {}, h('small', {}, 'Contrato'), etiqueta(os.sit_contrato, 'forte')),
         (podeEditar || eFinanceiro()) ? botao('Alterar situação', () => alterarSituacao(os, ctx.recarregar), 'pequeno') : null)),
+    artsPendentes.length ? h('div', { class: 'alerta erro' }, h('strong', {}, 'Pendência: '),
+      `serviço terminado, mas ${artsPendentes.length > 1 ? 'há ARTs ainda não baixadas' : 'a ART ainda não foi baixada'}`,
+      artsPendentes.some((a) => a.referencia) ? ` (${artsPendentes.map((a) => a.referencia).filter(Boolean).join(', ')})` : '', '. ',
+      h('a', { href: `#/os/${id}/processos` }, 'Ver em Processos/Documentos')) : null,
     os.revisar_migracao ? h('div', { class: 'alerta roxo' }, h('strong', {}, 'Revisar: '), os.revisar_migracao) : null,
     h('nav', { class: 'abas' }, ABAS.filter(([, , p]) => !p || p()).map(([k, t]) =>
       h('a', { href: `#/os/${id}/${k}`, class: k === aba ? 'ativa' : '' }, t))),
@@ -366,14 +373,16 @@ function dataVerificacao(data) {
 async function abaProcessos(el, ctx) {
   const { os, podeEditar } = ctx;
   const linhas = await q(sb.from('processo').select('*, processo_acesso(*)').eq('os_id', os.id).order('data_abertura', { nullsFirst: false }));
-  const recarregar = () => abaProcessos(el, ctx);
+  const recarregar = ctx.recarregar;   // recarrega a OS toda (o aviso de ART pendente fica no topo)
 
   function editar(p) {
     const a = p?.processo_acesso || {};
     let fechar;
     const form = formulario([
-      { k: 'natureza', rotulo: 'É um processo ou um documento?', tipo: 'opcoes', opcoes: ['Processo', 'Documento'], obrig: true, numerico: false, padrao: 'Processo' },
-      { k: 'instituicao', rotulo: 'Órgão / instituição', obrig: true, sugestoes: ['CETESB', 'CONDEPHAAT', 'Prefeitura Municipal de Guarujá', 'Prefeitura Municipal de Santos', 'DVTR-3', 'Ministério Público'] },
+      { k: 'natureza', rotulo: 'Tipo', tipo: 'opcoes', opcoes: ['Processo', 'Documento', 'ART'], obrig: true, numerico: false, padrao: 'Processo' },
+      { k: 'art_baixada', rotulo: 'ART baixada', tipo: 'marcar', padrao: false,
+        ajuda: 'Enquanto não for marcada, a OS fica com pendência quando o serviço terminar (técnico e comercial).' },
+      { k: 'instituicao', rotulo: 'Órgão / instituição', obrig: true, sugestoes: ['CETESB', 'CREA-SP', 'CONDEPHAAT', 'Prefeitura Municipal de Guarujá', 'Prefeitura Municipal de Santos', 'DVTR-3', 'Ministério Público'] },
       { k: 'referencia', rotulo: 'Número', ajuda: 'Nº do processo, do documento, da licença, do ofício...' },
       { k: 'data_abertura', rotulo: 'Data (abertura ou emissão)', tipo: 'data' },
       { k: 'objetivo', rotulo: 'Assunto / objetivo', largura: 2 },
@@ -389,6 +398,7 @@ async function abaProcessos(el, ctx) {
       { k: 'senha', rotulo: 'Senha', tipo: 'senha' },
     ], { ...p, ...a }, {
       aoSalvar: async (d) => {
+        if (d.natureza !== 'ART') d.art_baixada = false;
         const acesso = { plataforma: d.plataforma, login: d.login, senha: d.senha };
         delete d.plataforma; delete d.login; delete d.senha;
         let pid = p?.id;
@@ -407,6 +417,10 @@ async function abaProcessos(el, ctx) {
     form.ctrls.situacao.addEventListener('change', () => { form.ctrls.verificado_em.value = new Date().toLocaleDateString('sv-SE'); atualizarProxima(); });
     form.ctrls.verificado_em.addEventListener('change', atualizarProxima);
     form.ctrls.periodicidade.addEventListener('change', atualizarProxima);
+    // "ART baixada" só aparece quando o tipo é ART
+    const campoArt = form.ctrls.art_baixada.closest('.campo');
+    const mostrarArt = () => { campoArt.hidden = form.ctrls.natureza.value !== 'ART'; };
+    form.ctrls.natureza.addEventListener('change', mostrarArt); mostrarArt();
     fechar = abrirJanela(p ? 'Alterar processo/documento' : 'Incluir processo/documento', form, { largo: true });
   }
 
@@ -425,6 +439,7 @@ async function abaProcessos(el, ctx) {
     const item = (r, v) => v ? [h('dt', {}, r), h('dd', {}, v)] : null;
     abrirJanela(`${p.natureza || 'Processo'} ${p.referencia || ''}`, h('dl', { class: 'detalhes' },
       item('Órgão', p.instituicao), item('Número', p.referencia), item('Data', fmtData(p.data_abertura)), item('Assunto', p.objetivo),
+      item('ART baixada', p.natureza === 'ART' ? (p.art_baixada ? 'Sim' : 'Não') : null),
       item('Meio', p.tipo), item('Verificado em', fmtData(p.verificado_em)), item('Regularidade', p.periodicidade !== 'Nenhuma' ? p.periodicidade : null),
       item('Próxima verificação', fmtData(p.proxima_verificacao)), item('Situação', p.situacao ? h('span', { class: 'pre' }, p.situacao) : null),
       item('Observação interna', p.observacao), item('Portal', link(a.plataforma)), item('Login', a.login), item('Senha', senhaOculta(a.senha))), { largo: true });
@@ -434,7 +449,9 @@ async function abaProcessos(el, ctx) {
     podeEditar ? botao('Incluir processo/documento', () => editar(null), 'primario') : null,
     h('p', { class: 'ajuda' }, 'Clique numa linha para ver tudo, inclusive regularidade da verificação e o acesso ao portal (login e senha). "Verificado em" e "Situação" aparecem no link do cliente; login e senha nunca aparecem.'),
     tabela([
-      { rotulo: 'Tipo', k: 'natureza', f: (p) => etiqueta(p.natureza) },
+      { rotulo: 'Tipo', k: 'natureza', f: (p) => p.natureza === 'ART'
+        ? h('span', { class: 'nowrap' }, etiqueta('ART'), ' ', h('small', { class: p.art_baixada ? 'txt-cinza' : 'txt-vermelho' }, p.art_baixada ? 'baixada' : 'não baixada'))
+        : etiqueta(p.natureza) },
       { rotulo: 'Órgão', k: 'instituicao' },
       { rotulo: 'Número', k: 'referencia' },
       { rotulo: 'Data', f: (p) => fmtData(p.data_abertura), ord: (p) => p.data_abertura },
