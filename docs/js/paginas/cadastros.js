@@ -1,4 +1,4 @@
-import { sb, h, limpar, q, tabela, editarRegistro, botao, secao, carregarListas, NOME_PERFIL, etiqueta } from '../base.js';
+import { sb, st, h, limpar, q, tabela, editarRegistro, botao, secao, carregarListas, NOME_PERFIL, etiqueta, abrirJanela, aviso } from '../base.js';
 
 const LISTAS = [
   ['servico', 'Serviços (catálogo do escopo)', [{ k: 'descricao', rotulo: 'Serviço', obrig: true, largura: 2 }, { k: 'area', rotulo: 'Área' }]],
@@ -26,6 +26,39 @@ export async function paginaCadastros(el, aba) {
     { k: 'cpf', rotulo: 'CPF' },
     { k: 'rg', rotulo: 'RG' },
   ];
+  // Excluir pessoa (só Coordenação/Diretoria; a tela Cadastros já é só dela e o banco confere de novo).
+  // Antes de excluir, mostra do que a pessoa é responsável e pergunta para quem passar.
+  async function excluirPessoa(p, fecharCadastro) {
+    const v = await q(sb.rpc('vinculos_equipe', { p_id: p.id }));
+    const partes = [
+      [v.os, 'OS', `(${v.os_ativas} não encerradas)`], [v.tarefas, 'tarefa(s)'], [v.prazos, 'prazo(s)'],
+      [v.cronograma, 'atividade(s) de cronograma'], [v.andamentos, 'andamento(s)'], [v.produtos, 'produto(s) técnico(s)'],
+    ].filter(([n]) => n > 0);
+    const outros = equipe.filter((e) => e.id !== p.id && e.ativo);
+    const para = h('select', {}, h('option', { value: '' }, 'Ninguém: ficam "sem responsável"'),
+      outros.map((e) => h('option', { value: e.id }, e.nome)));
+    let fechar;
+    const confirmarExclusao = async () => {
+      const r = await q(sb.rpc('excluir_membro_equipe', { p_id: p.id, p_para: para.value ? Number(para.value) : null }));
+      fechar(); fecharCadastro();
+      aviso(`${r.nome} foi excluído(a) da equipe.`);
+      recarregar();
+    };
+    fechar = abrirJanela('Excluir pessoa da equipe', h('div', {},
+      h('p', {}, h('strong', {}, p.nome), ' sai do cadastro e perde o acesso ao sistema. Isso não pode ser desfeito.'),
+      partes.length ? [
+        h('p', {}, 'Esta pessoa é responsável por: ', partes.map(([n, t, extra]) => `${n} ${t}${extra ? ' ' + extra : ''}`).join(', '), '.'),
+        h('label', { class: 'campo largo' }, h('span', {}, 'Passar essas responsabilidades para'), para,
+          h('small', {}, 'Se escolher "Ninguém", os registros continuam no sistema, mas sem responsável.')),
+      ] : h('p', { class: 'txt-cinza' }, 'Ela não é responsável por nenhuma OS, tarefa, prazo, atividade, andamento ou produto técnico.'),
+      h('p', { class: 'txt-cinza' }, 'Se quiser só bloquear o acesso e manter o histórico com o nome dela, use "Ativo" (desmarcado) em vez de excluir.'),
+      h('div', { class: 'acoes' },
+        h('button', { class: 'btn', onclick: () => fechar() }, 'Cancelar'),
+        h('button', { class: 'btn perigo', onclick: async (e) => { e.target.disabled = true; try { await confirmarExclusao(); } catch { e.target.disabled = false; } } }, 'Excluir'))));
+  }
+  const editarPessoa = (r) => editarRegistro({ titulo: 'pessoa da equipe', tabela: 'equipe', campos: camposEquipe, registro: r, depois: recarregar,
+    podeExcluir: false, excluir: r && r.id !== st.eu.id ? (fechar) => excluirPessoa(r, fechar) : null });
+
   const listas = await Promise.all(LISTAS.map(([t]) => q(sb.from(t).select('*').order('descricao'))));
 
   const [cats, subs] = await Promise.all([
@@ -102,13 +135,13 @@ export async function paginaCadastros(el, aba) {
 
   limpar(el, h('h1', {}, 'Cadastros'),
     secao('Equipe e acessos', botao('Incluir pessoa', () => editarRegistro({ titulo: 'pessoa da equipe', tabela: 'equipe', campos: camposEquipe, depois: recarregar, podeExcluir: false }), 'primario'),
-      h('p', { class: 'ajuda' }, 'Para liberar o acesso: cadastre o e-mail e o perfil. A pessoa entra no sistema, clica em "Primeiro acesso" e cria a senha. Para bloquear, desmarque "Ativo" ou tire o perfil.'),
+      h('p', { class: 'ajuda' }, 'Para liberar o acesso: cadastre o e-mail e o perfil. A pessoa entra no sistema, clica em "Primeiro acesso" e cria a senha. Para bloquear, desmarque "Ativo" ou tire o perfil. Para excluir, clique na pessoa e use "Excluir" (o sistema pergunta para quem passar as OS, tarefas e prazos dela).'),
       tabela([
         { rotulo: 'Nome', k: 'nome' }, { rotulo: 'Iniciais', k: 'iniciais' }, { rotulo: 'E-mail', k: 'email' },
         { rotulo: 'Perfil', f: (e) => NOME_PERFIL[e.perfil] || h('span', { class: 'txt-cinza' }, 'sem acesso') },
         { rotulo: 'Login', f: (e) => e.user_id ? h('span', { class: 'etq verde' }, 'criado') : (e.email ? h('span', { class: 'etq amarelo' }, 'aguardando') : '') },
         { rotulo: 'Ativo', f: (e) => e.ativo ? 'Sim' : 'Não' },
-      ], equipe, { aoClicar: (r) => editarRegistro({ titulo: 'pessoa da equipe', tabela: 'equipe', campos: camposEquipe, registro: r, depois: recarregar, podeExcluir: false }) })),
+      ], equipe, { aoClicar: editarPessoa })),
     secaoCategorias,
     secaoAtividades,
     LISTAS.map(([t, titulo, campos], i) => h('details', { class: 'secao recolhivel' }, h('summary', {}, titulo, ' ', h('span', { class: 'contador' }, listas[i].length)),

@@ -56,7 +56,7 @@ const CORES = {
   'Vencido': 'vermelho', 'Atrasada': 'vermelho', 'Próximos 7 dias': 'laranja', 'Próximos 30 dias': 'amarelo',
   'Mais adiante': 'cinza', 'Sem data': 'cinza', 'A vencer': 'amarelo', 'Interna': 'cinza', 'Geral': 'azul',
   'Previsto': 'amarelo', 'Não iniciada': 'cinza', 'Alta': 'vermelho', 'Média': 'amarelo', 'Baixa': 'cinza',
-  'Atendido': 'verde', 'Atendido fora do prazo': 'laranja', 'Apoio técnico': 'roxo', 'Processo': 'azul', 'Documento': 'roxo',
+  'Atendido': 'verde', 'Atendido fora do prazo': 'laranja', 'Apoio técnico': 'roxo', 'Processo': 'azul', 'Documento': 'roxo', 'ART': 'verde',
   'Concluída fora do prazo': 'laranja', 'Vencida': 'vermelho',
   'Triunfo': 'azul', 'Cliente': 'laranja', 'Preliminar': 'roxo',
 };
@@ -200,7 +200,8 @@ export function formulario(campos, valores = {}, { aoSalvar, aoExcluir, rotuloSa
 }
 
 // Abre um formulário em janela para incluir/alterar um registro de uma tabela
-export function editarRegistro({ titulo, tabela, campos, registro, extras = {}, depois, podeExcluir = true, antesDeSalvar }) {
+// excluir: função própria para o botão Excluir (recebe a função que fecha a janela)
+export function editarRegistro({ titulo, tabela, campos, registro, extras = {}, depois, podeExcluir = true, antesDeSalvar, excluir }) {
   let fechar;
   const novo = !registro?.id;
   const form = formulario(campos, registro || {}, {
@@ -212,7 +213,7 @@ export function editarRegistro({ titulo, tabela, campos, registro, extras = {}, 
       aviso(novo ? 'Incluído.' : 'Alterações salvas.');
       fechar(); depois && depois();
     },
-    aoExcluir: !novo && podeExcluir ? async () => {
+    aoExcluir: !novo && excluir ? () => excluir(fechar) : !novo && podeExcluir ? async () => {
       if (!(await confirmar('Excluir este registro? Isso não pode ser desfeito.'))) return;
       await q(sb.from(tabela).delete().eq('id', registro.id));
       aviso('Excluído.'); fechar(); depois && depois();

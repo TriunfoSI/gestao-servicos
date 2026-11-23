@@ -36,7 +36,7 @@ export function colunasPrazo({ comOS = true } = {}) {
     { rotulo: 'Quando', ord: (p) => p.dias_restantes, f: quando },
     comOS && { rotulo: 'OS', ord: (p) => p.os_numero, f: (p) => h('a', { href: `#/os/${p.os_id}/prazos`, onclick: (e) => e.stopPropagation() }, p.os_numero || '—') },
     comOS && { rotulo: 'Cliente', k: 'cliente_curto' },
-    { rotulo: 'Prazo', k: 'descricao', classe: 'texto' },
+    { rotulo: 'Descrição', k: 'descricao', classe: 'texto' },
     { rotulo: 'Tipo', k: 'tipo' },
     { rotulo: 'Origem', k: 'origem' },
     { rotulo: 'Resp.', k: 'responsavel_iniciais' },

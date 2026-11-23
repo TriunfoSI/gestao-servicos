@@ -10,23 +10,23 @@
   <script type="importmap">
   {
     "imports": {
-      "./config.js": "./config.js?v=202611212011",
-      "./js/app.js": "./js/app.js?v=202611212011",
-      "./js/base.js": "./js/base.js?v=202611212011",
-      "./js/paginas/busca.js": "./js/paginas/busca.js?v=202611212011",
-      "./js/paginas/cadastros.js": "./js/paginas/cadastros.js?v=202611212011",
-      "./js/paginas/clientes.js": "./js/paginas/clientes.js?v=202611212011",
-      "./js/paginas/cronograma.js": "./js/paginas/cronograma.js?v=202611212011",
-      "./js/paginas/financeiro.js": "./js/paginas/financeiro.js?v=202611212011",
-      "./js/paginas/fornecedores.js": "./js/paginas/fornecedores.js?v=202611212011",
-      "./js/paginas/os.js": "./js/paginas/os.js?v=202611212011",
-      "./js/paginas/painel.js": "./js/paginas/painel.js?v=202611212011",
-      "./js/paginas/prazos.js": "./js/paginas/prazos.js?v=202611212011",
-      "./js/paginas/tarefas.js": "./js/paginas/tarefas.js?v=202611212011"
+      "./config.js": "./config.js?v=202611231815",
+      "./js/app.js": "./js/app.js?v=202611231815",
+      "./js/base.js": "./js/base.js?v=202611231815",
+      "./js/paginas/busca.js": "./js/paginas/busca.js?v=202611231815",
+      "./js/paginas/cadastros.js": "./js/paginas/cadastros.js?v=202611231815",
+      "./js/paginas/clientes.js": "./js/paginas/clientes.js?v=202611231815",
+      "./js/paginas/cronograma.js": "./js/paginas/cronograma.js?v=202611231815",
+      "./js/paginas/financeiro.js": "./js/paginas/financeiro.js?v=202611231815",
+      "./js/paginas/fornecedores.js": "./js/paginas/fornecedores.js?v=202611231815",
+      "./js/paginas/os.js": "./js/paginas/os.js?v=202611231815",
+      "./js/paginas/painel.js": "./js/paginas/painel.js?v=202611231815",
+      "./js/paginas/prazos.js": "./js/paginas/prazos.js?v=202611231815",
+      "./js/paginas/tarefas.js": "./js/paginas/tarefas.js?v=202611231815"
     }
   }
   </script>
-  <link rel="stylesheet" href="css/estilo.css?v=202611212011">
+  <link rel="stylesheet" href="css/estilo.css?v=202611231815">
   <style>
     .rel { max-width: 960px; margin: 0 auto; padding: 1.25rem; }
     .rel-topo { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; border-bottom: 3px solid var(--marca); padding-bottom: .75rem; margin-bottom: 1rem; }
@@ -88,7 +88,7 @@
         secao('Cronograma',
           (r.cronograma || []).some((p) => p.responsavel === 'Cliente') ? h('p', { class: 'ajuda' }, 'Na coluna "Responsável", as atividades marcadas como ', etq('Cliente'), ' dependem de uma ação sua para o serviço seguir.') : null,
           tabela([['Atividade', (p) => p.descricao, 'texto'], ['Responsável', (p) => etq(p.responsavel)], ['Início', (p) => data(p.inicio)], ['Término', (p) => data(p.termino)], ['Situação', (p) => etq(p.situacao)]], r.cronograma || [], 'Nenhuma atividade cadastrada.')),
-        (r.prazos || []).length ? secao('Prazos', tabela([['Data', (p) => data(p.data)], ['Prazo', (p) => p.descricao, 'texto'], ['Tipo', (p) => p.tipo || ''], ['Origem', (p) => p.origem || ''], ['Situação', (p) => etq(p.situacao)], ['Atendido em', (p) => data(p.atendimento)]], r.prazos, '')) : null,
+        (r.prazos || []).length ? secao('Prazos', tabela([['Data', (p) => data(p.data)], ['Descrição', (p) => p.descricao, 'texto'], ['Tipo', (p) => p.tipo || ''], ['Origem', (p) => p.origem || ''], ['Situação', (p) => etq(p.situacao)], ['Atendido em', (p) => data(p.atendimento)]], r.prazos, '')) : null,
         secao('Andamento', r.andamento.length ? h('ul', { class: 'linha-tempo' }, r.andamento.map((m) => h('li', {}, h('div', { class: 'lt-data' }, data(m.data)),
           h('div', { class: 'lt-corpo' }, m.detalhe ? h('strong', {}, m.detalhe) : null, h('p', { class: 'pre' }, m.descricao))))) : h('p', { class: 'vazio' }, 'Nenhum registro de andamento divulgado ainda.')),
         secao('Processos e documentos', tabela([['Tipo', (p) => p.natureza || ''], ['Órgão', (p) => p.instituicao || ''], ['Número', (p) => p.referencia || ''], ['Data', (p) => data(p.abertura)], ['Assunto', (p) => p.objetivo || '', 'texto'],
