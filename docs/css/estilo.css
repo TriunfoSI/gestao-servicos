@@ -266,7 +266,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
 .tres-quadros .tabela-os { table-layout: fixed; }
 .tabela-os th:nth-child(1) { width: 5.6rem; }
 .tabela-os th.col-resp { width: 3.2rem; }
-.tabela-os th.col-sit { width: 8.6rem; }
+.tabela-os th.col-sit { width: 10.4rem; }
 .tabela-os td { overflow-wrap: anywhere; }
 @media (max-width: 640px) {
   .tabela-os tr.detalhe-os td { display: block; }

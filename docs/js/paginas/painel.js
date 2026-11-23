@@ -1,4 +1,4 @@
-import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, perfil, cartao } from '../base.js';
+import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, fmtReais, perfil, cartao } from '../base.js';
 import { abrirTarefa, etiquetaTarefa } from './tarefas.js';
 
 // Situação automática da OS (calculada no banco pela visão v_os_situacao):
@@ -85,22 +85,44 @@ function tabelaTarefas(tarefas, soMeu, recarregar) {
     corpo));
 }
 
+// Tipos de prazo considerados do financeiro (o perfil Financeiro vê só estes no Início)
+export const TIPOS_PRAZO_FINANCEIRO = ['Pagamento', 'Nota fiscal', 'Vencimento de contrato'];
+
 export async function paginaPainel(el) {
   const meuId = st.eu.id;
   const soMeu = perfil() === 'tecnico';
+  // Financeiro: OS só com Pendência Comercial, prazos do financeiro (parcelas e
+  // prazos de tipo financeiro) e só as tarefas atribuídas a ele
+  const fin = perfil() === 'financeiro';
 
   let osQ = sb.from('v_os_situacao').select('*');
   if (soMeu) osQ = osQ.eq('responsavel_id', meuId);
   let prazosQ = sb.from('v_prazo').select('*').order('data_termino', { nullsFirst: false });
   if (soMeu) prazosQ = prazosQ.eq('responsavel_id', meuId);
+  if (fin) prazosQ = prazosQ.in('tipo', TIPOS_PRAZO_FINANCEIRO);
+  // parcelas não pagas vencidas ou com previsão nos próximos 30 dias (só para o Financeiro)
+  const em30dias = new Date(Date.now() + 30 * 864e5).toLocaleDateString('sv-SE');
+  const parcelasQ = fin ? sb.from('v_parcela').select('*').not('situacao', 'in', '("Pago","Cancelada")')
+    .lte('data_prevista', em30dias).order('data_prevista') : null;
   // tarefas abertas + concluídas nos últimos 15 dias (para a reunião semanal)
   const ha15dias = new Date(Date.now() - 15 * 864e5).toLocaleDateString('sv-SE');
   let tarefasQ = sb.from('v_tarefa').select('*').neq('situacao', 'Cancelada')
     .or(`situacao.neq.Concluída,data_atendimento.gte.${ha15dias}`)
     .order('prioridade_ordem').order('prazo', { nullsFirst: false });
-  if (soMeu) tarefasQ = tarefasQ.eq('responsavel_id', meuId);
+  if (soMeu || fin) tarefasQ = tarefasQ.eq('responsavel_id', meuId);
 
-  const [oss, prazos, todasTarefas] = await Promise.all([q(osQ), q(prazosQ), q(tarefasQ)]);
+  const [todasOs, prazosBase, todasTarefas, parcelas] = await Promise.all([q(osQ), q(prazosQ), q(tarefasQ), parcelasQ ? q(parcelasQ) : []]);
+  // Financeiro: toda OS com parcela vencida, mesmo que também tenha pendência técnica
+  const oss = fin ? todasOs.filter((o) => (o.itens || []).some((i) => i.origem === 'Parcela' && i.estado === 'Vencido'))
+    .map((o) => ({ ...o, situacao: 'Pendência Comercial', itens: o.itens.filter((i) => i.origem === 'Parcela') })) : todasOs;
+  // parcela vira uma linha no quadro Prazos (mesmo formato de v_prazo)
+  const hojeTxt = new Date().toLocaleDateString('sv-SE');
+  const prazos = [...prazosBase, ...parcelas.map((pa) => ({
+    data_termino: pa.data_prevista, os_id: pa.os_id, os_numero: pa.os_numero, aba: 'financeiro',
+    descricao: [`Parcela ${pa.numero ?? ''}${pa.total_parcelas ? '/' + pa.total_parcelas : ''}`, pa.cliente_curto, fmtReais(pa.valor)].filter(Boolean).join(' · '),
+    situacao: pa.data_prevista < hojeTxt ? 'Vencido' : 'A vencer',
+    dias_restantes: Math.round((new Date(pa.data_prevista + 'T00:00') - new Date(hojeTxt + 'T00:00')) / 864e5),
+  }))].sort((a, b) => String(a.data_termino || '9999').localeCompare(String(b.data_termino || '9999')));
   const tarefas = todasTarefas.filter((t) => t.situacao !== 'Concluída');
   const concluidas = todasTarefas.filter((t) => t.situacao === 'Concluída')
     .sort((a, b) => String(b.data_atendimento).localeCompare(String(a.data_atendimento)));
@@ -123,7 +145,7 @@ export async function paginaPainel(el) {
   const tituloOs = h('small');
   const desenharOs = () => {
     tituloOs.textContent = soPendencia ? ' · só com pendência' : ` · ${oss.length}`;
-    limpar(caixaOs, tabelaOs(soPendencia ? comPendencia : oss, soMeu, soPendencia ? 'Nenhuma OS com pendência.' : 'Nenhuma OS em andamento.'));
+    limpar(caixaOs, tabelaOs(soPendencia ? comPendencia : oss, soMeu, soPendencia ? 'Nenhuma OS com pendência.' : fin ? 'Nenhuma OS com pendência comercial.' : 'Nenhuma OS em andamento.'));
   };
   desenharOs();
 
@@ -134,7 +156,13 @@ export async function paginaPainel(el) {
     soPendencia = !soPendencia; cartaoPendencias.classList.toggle('ativo', soPendencia); desenharOs();
   });
 
-  const cartoes = h('div', { class: 'cartoes quatro' },
+  const parcelasVencidas = parcelas.filter((pa) => pa.data_prevista < hojeTxt);
+  const cartoes = fin ? h('div', { class: 'cartoes quatro' },
+    cartao('Pendência comercial', oss.length, 'OS com parcela vencida', oss.length ? 'laranja' : 'verde'),
+    cartao('Prazos a vencer', em10dias.length, `nos próximos 10 dias · ${vencidos.length} vencidos`, em10dias.length ? 'amarelo' : '', '#/prazos'),
+    cartao('Parcelas vencidas', parcelasVencidas.length, fmtReais(parcelasVencidas.reduce((s, pa) => s + Number(pa.valor || 0), 0)) + ' em atraso', parcelasVencidas.length ? 'vermelho' : 'verde', '#/financeiro'),
+    cartao('Minhas tarefas', tarefas.length, `${altas.length} de prioridade alta`, '', '#/tarefas'),
+  ) : h('div', { class: 'cartoes quatro' },
     cartao(soMeu ? 'Minhas OS ativas' : 'OS ativas', ativas.length, `contrato não encerrado · ${paralisadas.length} paralisadas`, 'azul', '#/os'),
     cartao('Prazos a vencer', em10dias.length, `nos próximos 10 dias · ${vencidos.length} vencidos`, em10dias.length ? 'amarelo' : '', '#/prazos'),
     cartaoPendencias,
@@ -144,7 +172,7 @@ export async function paginaPainel(el) {
   // ------------------------------------------------ quadros Prazos e Tarefas
   const colPrazo = [
     { rotulo: 'Data', ord: (p) => p.data_termino, f: (p) => h('span', { class: p.situacao === 'Vencido' ? 'txt-vermelho nowrap' : 'nowrap' }, fmtData(p.data_termino)) },
-    { rotulo: 'OS', ord: (p) => p.os_numero, f: (p) => h('a', { href: `#/os/${p.os_id}/prazos`, class: 'nowrap' }, p.os_numero || '—') },
+    { rotulo: 'OS', ord: (p) => p.os_numero, f: (p) => h('a', { href: `#/os/${p.os_id}/${p.aba || 'prazos'}`, class: 'nowrap' }, p.os_numero || '—') },
     { rotulo: 'Descrição', k: 'descricao', classe: 'texto', f: (p) => h('div', { class: 'resumo-3', title: p.descricao || '' }, p.descricao || '') },
     { rotulo: 'Situação', k: 'situacao', f: (p) => etiqueta(p.situacao) },
   ];
@@ -156,10 +184,10 @@ export async function paginaPainel(el) {
     h('h1', {}, `Olá, ${st.eu.nome.split(' ')[0]}`),
     cartoes,
     h('div', { class: 'tres-quadros' },
-      quadro(soMeu ? 'Minhas OS' : 'Ordens de serviço', tituloOs, '#/os', caixaOs),
+      quadro(soMeu ? 'Minhas OS' : fin ? 'OS com pendência comercial' : 'Ordens de serviço', tituloOs, '#/os', caixaOs),
       quadro('Prazos', h('small', {}, ` · ${aVencer.length} a vencer, ${vencidos.length} vencidos`), '#/prazos',
-        h('div', { class: 'caixa-rolagem' }, tabela(colPrazo, [...aVencer, ...vencidos, ...prazos.filter((p) => p.situacao === 'Sem data')], { vazio: 'Nenhum prazo em aberto.' }))),
-      quadro(soMeu ? 'Minhas tarefas' : 'Tarefas', h('small', {}, ` · ${tarefas.length} abertas, ${concluidas.length} concluídas (15 dias)`), '#/tarefas',
-        h('div', { class: 'caixa-rolagem' }, tabelaTarefas([...tarefas, ...concluidas], soMeu, () => paginaPainel(el))))),
+        h('div', { class: 'caixa-rolagem' }, tabela(colPrazo, [...aVencer, ...vencidos, ...prazos.filter((p) => p.situacao === 'Sem data')], { vazio: fin ? 'Nenhuma parcela ou prazo do financeiro em aberto.' : 'Nenhum prazo em aberto.' }))),
+      quadro(soMeu || fin ? 'Minhas tarefas' : 'Tarefas', h('small', {}, ` · ${tarefas.length} abertas, ${concluidas.length} concluídas (15 dias)`), '#/tarefas',
+        h('div', { class: 'caixa-rolagem' }, tabelaTarefas([...tarefas, ...concluidas], soMeu || fin, () => paginaPainel(el))))),
   );
 }

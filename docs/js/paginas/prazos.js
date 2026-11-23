@@ -21,7 +21,7 @@ export function ordenarPrazos(linhas) {
 }
 const ORIGENS = ['CETESB', 'MP | Ofício', 'MP', 'Prefeitura', 'CONDEPHAAT', 'Cliente', 'CTR-3', 'Contrato', 'Planejamento'];
 const TIPOS = ['Prazo de órgão', 'Comunique-se', 'Entrega de produto', 'Vencimento de contrato', 'Protocolo',
-  'Produto técnico', 'Vencimento', 'Vistoria técnica', 'Reunião'];
+  'Produto técnico', 'Vencimento', 'Vistoria técnica', 'Reunião', 'Pagamento', 'Nota fiscal'];
 
 const quando = (p) => {
   if (p.dias_restantes == null || ATENDIDOS.includes(p.situacao)) return '';
@@ -53,7 +53,7 @@ export function editarPrazo(registro, osId, depois) {
   const so = !!registro && !eGestor() && registro.os_responsavel_id !== st.eu.id;
   const campos = [
     { k: 'descricao', rotulo: 'Descrição do prazo', obrig: true, largura: 2, desativado: so },
-    { k: 'tipo', rotulo: 'Tipo', sugestoes: TIPOS, ajuda: 'Escolha da lista ou escreva outro.', desativado: so },
+    { k: 'tipo', rotulo: 'Tipo', sugestoes: TIPOS, ajuda: 'Escolha da lista ou escreva outro. Pagamento, Nota fiscal e Vencimento de contrato aparecem no Início do Financeiro.', desativado: so },
     { k: 'origem', rotulo: 'Origem', sugestoes: ORIGENS, desativado: so },
     { k: 'data_inicio', rotulo: 'Data de recebimento (opcional)', tipo: 'data', ajuda: 'Use junto com o prazo em dias para calcular a data.', desativado: so },
     { k: 'qtd_dias', rotulo: 'Prazo em dias', tipo: 'numero', desativado: so },
