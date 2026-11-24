@@ -9,7 +9,7 @@ import { editarTarefa, abrirTarefa, etiquetaTarefa } from './tarefas.js';
 import { abaFinanceiro } from './financeiro.js';
 
 export const SIT_TECNICA = ['Não iniciado', 'Em andamento', 'Paralisado', 'Finalizado', 'Cancelado'];
-export const SIT_COMERCIAL = ['Em aberto', 'Paralisado', 'Encerrado'];
+export const SIT_COMERCIAL = ['Em aberto', 'Paralisado', 'Encerrado', 'Cancelado'];
 const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
 
 // ================================================================== lista
@@ -17,7 +17,7 @@ export async function paginaListaOS(el) {
   const todas = await q(sb.from('v_os').select('id,numero,titulo,cliente_curto,cliente_nome,local,municipio,responsavel_id,responsavel_iniciais,sit_tecnica,sit_comercial,sit_contrato,sit_tecnica_detalhe,data_aceite,revisar_migracao,categoria_id,subcategoria_id,categoria,subcategoria').order('id', { ascending: false }));
   const params = new URLSearchParams((location.hash.split('?')[1]) || '');
   const busca = h('input', { type: 'search', placeholder: 'Buscar por nº, título, cliente ou local' });
-  const contrato = h('select', {}, ['Ativo', 'Paralisado', 'Encerrado', 'Todos'].map((s) => h('option', {}, s)));
+  const contrato = h('select', {}, ['Ativo', 'Paralisado', 'Encerrado', 'Cancelado', 'Todos'].map((s) => h('option', {}, s)));
   const resp = h('select', {}, h('option', { value: '' }, 'Todos os responsáveis'), opcoesEquipe().map(([v, t]) => h('option', { value: v }, t)));
   const revisar = h('input', { type: 'checkbox', checked: params.has('revisar') });
   const cat = h('select', {}, h('option', { value: '' }, 'Todas as categorias'), opcoesLista('os_categoria', 'descricao', false).map(([v, t]) => h('option', { value: v }, t)));
@@ -201,7 +201,7 @@ function alterarSituacao(os, depois) {
     { k: 'sit_tecnica', rotulo: 'Situação técnica', tipo: 'opcoes', opcoes: SIT_TECNICA, obrig: true, numerico: false, desativado: !tec },
     { k: 'sit_tecnica_detalhe_id', rotulo: 'Detalhe da situação técnica', tipo: 'opcoes', opcoes: () => opcoesLista('os_situacao_detalhe'), desativado: !tec },
     { k: 'sit_comercial', rotulo: 'Situação comercial', tipo: 'opcoes', opcoes: SIT_COMERCIAL, obrig: true, numerico: false, desativado: !com },
-    { tipo: 'info', rotulo: 'A situação do contrato é calculada: fica "Encerrado" quando a técnica estiver Finalizada (ou Cancelada) e a comercial Encerrada.' },
+    { tipo: 'info', rotulo: 'A situação do contrato é calculada: "Cancelado" quando técnica, detalhe técnico e comercial estiverem cancelados; "Encerrado" quando a técnica estiver Finalizada (ou Cancelada) e a comercial Encerrada; "Paralisado" quando a técnica, o detalhe técnico ou a comercial estiver paralisado.' },
     eGestor() && os.revisar_migracao ? { k: 'revisada', rotulo: 'Marcar como revisada (some o aviso da importação)', tipo: 'marcar' } : null,
   ].filter(Boolean), os, {
     aoSalvar: async (d) => {

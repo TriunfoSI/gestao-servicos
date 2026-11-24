@@ -12,7 +12,7 @@ export function etiquetaTarefa(t) {
 }
 
 async function opcoesOS() {
-  const lista = await q(sb.from('v_os').select('id,numero,cliente_curto,titulo').neq('sit_contrato', 'Encerrado').order('id', { ascending: false }));
+  const lista = await q(sb.from('v_os').select('id,numero,cliente_curto,titulo').not('sit_contrato', 'in', '("Encerrado","Cancelado")').order('id', { ascending: false }));
   return lista.map((o) => [o.id, `${o.numero || '#' + o.id} — ${o.cliente_curto} — ${(o.titulo || '').slice(0, 50)}`]);
 }
 
