@@ -140,6 +140,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
 .historico { list-style: none; padding: 0; }
 .historico li { border-bottom: 1px solid var(--linha); padding: .5rem 0; }
 .tarefa-desc { font-size: 1.05rem; }
+.vinculo { display: block; color: var(--suave); font-size: .78rem; margin-top: .15rem; }
 .senha { font-family: monospace; }
 
 /* janela e formulário */
