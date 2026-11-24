@@ -8,6 +8,7 @@ import { abrirTarefa, etiquetaTarefa } from './tarefas.js';
 //   Em conformidade (verde)    -> nada vencido nem vencendo em 10 dias
 //   Paralisado (cinza)         -> contrato paralisado (fica no fim da lista)
 // OS encerrada com ART ainda não baixada aparece como Pendência.
+// OS cancelada não aparece (nem os prazos, parcelas e tarefas dela).
 const SITUACOES = [
   ['Pendência', 'vermelho'],
   ['Pendência Comercial', 'laranja'],
@@ -111,7 +112,15 @@ export async function paginaPainel(el) {
     .order('prioridade_ordem').order('prazo', { nullsFirst: false });
   if (soMeu || fin) tarefasQ = tarefasQ.eq('responsavel_id', meuId);
 
-  const [todasOs, prazosBase, todasTarefas, parcelas] = await Promise.all([q(osQ), q(prazosQ), q(tarefasQ), parcelasQ ? q(parcelasQ) : []]);
+  const canceladasQ = sb.from('os').select('id').eq('sit_contrato', 'Cancelado');
+
+  const [todasOs, prazosTodos, tarefasTodas, parcelasTodas, canceladas] = await Promise.all(
+    [q(osQ), q(prazosQ), q(tarefasQ), parcelasQ ? q(parcelasQ) : [], q(canceladasQ)]);
+  const idsCanceladas = new Set(canceladas.map((o) => o.id));
+  const semCanceladas = (lista) => lista.filter((x) => !idsCanceladas.has(x.os_id));
+  const prazosBase = semCanceladas(prazosTodos);
+  const todasTarefas = semCanceladas(tarefasTodas);
+  const parcelas = semCanceladas(parcelasTodas);
   // Financeiro: toda OS com parcela vencida, mesmo que também tenha pendência técnica
   const oss = fin ? todasOs.filter((o) => (o.itens || []).some((i) => i.origem === 'Parcela' && i.estado === 'Vencido'))
     .map((o) => ({ ...o, situacao: 'Pendência Comercial', itens: o.itens.filter((i) => i.origem === 'Parcela') })) : todasOs;

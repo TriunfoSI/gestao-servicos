@@ -102,7 +102,7 @@ export async function abaFinanceiro(el, ctx) {
       cartao('A receber', fmtReais(r.a_receber || 0), `${r.qtd_abertas || 0} parcelas abertas`, r.a_receber ? 'amarelo' : ''),
       cartao('Custos', fmtReais(r.custos || 0)),
       cartao('Resultado previsto', fmtReais(r.resultado_previsto || 0), 'valor final − custos', (r.resultado_previsto || 0) < 0 ? 'vermelho' : 'azul')),
-    tudoPago && os.sit_comercial !== 'Encerrado' ? h('div', { class: 'alerta verde' },
+    tudoPago && !['Encerrado', 'Cancelado'].includes(os.sit_comercial) ? h('div', { class: 'alerta verde' },
       'Todas as parcelas estão pagas. ', h('button', { class: 'btn pequeno', onclick: async () => {
         await q(sb.from('os').update({ sit_comercial: 'Encerrado' }).eq('id', os.id));
         aviso('Parte comercial encerrada.'); ctx.recarregar();

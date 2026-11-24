@@ -34,7 +34,7 @@ export async function paginaClientes(el) {
     q(sb.from('os').select('cliente_id,sit_contrato')),
   ]);
   const ativas = {}, total = {};
-  oss.forEach((o) => { total[o.cliente_id] = (total[o.cliente_id] || 0) + 1; if (o.sit_contrato !== 'Encerrado') ativas[o.cliente_id] = (ativas[o.cliente_id] || 0) + 1; });
+  oss.forEach((o) => { total[o.cliente_id] = (total[o.cliente_id] || 0) + 1; if (!['Encerrado', 'Cancelado'].includes(o.sit_contrato)) ativas[o.cliente_id] = (ativas[o.cliente_id] || 0) + 1; });
   const busca = h('input', { type: 'search', placeholder: 'Buscar por nome, CNPJ ou município' });
   const area = h('div');
   const mostrar = () => {
