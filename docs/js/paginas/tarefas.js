@@ -1,7 +1,11 @@
 import { sb, st, h, limpar, q, aviso, tabela, etiqueta, fmtData, fmtDataHora, editarRegistro, abrirJanela, formulario,
   opcoesEquipe, eGestor, perfil, botao } from '../base.js';
 
-export const SIT_TAREFA = ['A fazer', 'Em andamento', 'Apoio técnico', 'Aguardando terceiros', 'Concluída', 'Cancelada'];
+export const SIT_TAREFA = ['A fazer', 'Em andamento', 'Apoio técnico', 'Aguardando terceiros', 'Subtarefas', 'Subtarefas concluídas', 'Concluída', 'Cancelada'];
+// "Subtarefas" e "Subtarefas concluídas" são automáticas (o banco coloca conforme as subtarefas):
+// só aparecem na lista de escolha quando a tarefa já está nessa situação
+const AUTOMATICAS = ['Subtarefas', 'Subtarefas concluídas'];
+const situacoesEscolha = (atual) => SIT_TAREFA.filter((s) => !AUTOMATICAS.includes(s) || s === atual);
 export const PRIORIDADES = ['Alta', 'Média', 'Baixa'];
 
 // Situação da tarefa comparada ao prazo (mesma lógica dos prazos):
@@ -50,7 +54,8 @@ export async function editarTarefa(registro, depois, osId, pai) {
       { k: 'prioridade', rotulo: 'Prioridade', tipo: 'opcoes', opcoes: PRIORIDADES, obrig: true, numerico: false, padrao: 'Média' },
       { k: 'data_reuniao', rotulo: 'Data de criação', tipo: 'data', padrao: new Date().toLocaleDateString('sv-SE') },
       { k: 'prazo', rotulo: 'Prazo', tipo: 'data' },
-      { k: 'situacao', rotulo: 'Situação', tipo: 'opcoes', opcoes: SIT_TAREFA, obrig: true, numerico: false, padrao: 'A fazer' },
+      { k: 'situacao', rotulo: 'Situação', tipo: 'opcoes', opcoes: situacoesEscolha(registro?.situacao), obrig: true, numerico: false, padrao: 'A fazer',
+        ajuda: registro?.situacao === 'Subtarefas' ? 'Fica em "Subtarefas" até que todas as subtarefas sejam concluídas ou canceladas.' : null },
       { k: 'data_atendimento', rotulo: 'Data de atendimento', tipo: 'data', ajuda: 'Preenchida sozinha quando a tarefa é concluída. Pode ser corrigida aqui.' },
       { k: 'orientacao_tecnica', rotulo: 'Orientação técnica', tipo: 'area', linhas: 4, ajuda: 'Orientação da coordenação para o técnico executar a tarefa.' },
       { k: 'observacao', rotulo: 'Observação', tipo: 'area', linhas: 2 },
@@ -71,13 +76,13 @@ export async function abrirTarefa(id, depois) {
   const quem = (uid) => st.listas.equipe.find((e) => e.user_id === uid)?.nome || '';
   let fechar;
   const atualizar = formulario([
-    { k: 'situacao', rotulo: 'Nova situação', tipo: 'opcoes', opcoes: SIT_TAREFA, obrig: true, numerico: false },
+    { k: 'situacao', rotulo: 'Nova situação', tipo: 'opcoes', opcoes: situacoesEscolha(t.situacao), obrig: true, numerico: false },
     { k: 'comentario', rotulo: 'Comentário do técnico', tipo: 'area', linhas: 3 },
   ], { situacao: t.situacao }, {
     rotuloSalvar: 'Atualizar',
     aoSalvar: async (d) => {
-      if (d.situacao === 'Concluída' && t.situacao !== 'Concluída' && subsAbertas.length) {
-        aviso(`Esta tarefa tem ${subsAbertas.length} subtarefa(s) em aberto. Ela só pode ser concluída depois que todas as subtarefas forem concluídas ou canceladas.`, 'erro');
+      if (!['Subtarefas', 'Cancelada'].includes(d.situacao) && t.situacao !== d.situacao && subsAbertas.length) {
+        aviso(`Esta tarefa tem ${subsAbertas.length} subtarefa(s) em aberto. Ela fica em "Subtarefas" até que todas sejam concluídas ou canceladas.`, 'erro');
         return;
       }
       if (d.situacao !== t.situacao) await q(sb.from('tarefa').update({ situacao: d.situacao }).eq('id', id));
@@ -104,7 +109,7 @@ export async function abrirTarefa(id, depois) {
     subs.length ? [
       h('h3', {}, 'Subtarefas ', h('small', {}, `· ${t.subtarefas_concluidas} de ${t.subtarefas_total} concluídas`)),
       subsAbertas.length && t.situacao !== 'Concluída'
-        ? h('p', { class: 'ajuda' }, 'Esta tarefa só pode ser concluída depois que todas as subtarefas forem concluídas ou canceladas.') : null,
+        ? h('p', { class: 'ajuda' }, 'A situação desta tarefa fica em "Subtarefas" até que todas as subtarefas sejam concluídas ou canceladas. Depois ela passa sozinha para "Subtarefas concluídas" e pode ser concluída.') : null,
       tabela([
         { rotulo: 'Subtarefa', k: 'descricao', classe: 'texto' },
         { rotulo: 'Responsável', k: 'responsavel_nome' },
