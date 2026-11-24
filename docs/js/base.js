@@ -115,14 +115,14 @@ export const nomeEquipe = (id) => st.listas.equipe?.find((e) => e.id === id)?.no
 
 // ------------------------------------------------------------------ janela (modal)
 export function abrirJanela(titulo, conteudo, { largo = false, extraLargo = false } = {}) {
-  const fundo = h('div', { class: 'fundo-janela', onclick: (e) => { if (e.target === fundo) fechar(); } });
+  // A janela só fecha pelo X (ou pelos botões dela): clicar fora ou apertar Esc não fecha,
+  // para não perder o que foi digitado por um clique acidental.
+  const fundo = h('div', { class: 'fundo-janela' });
   const janela = h('div', { class: 'janela' + (largo ? ' larga' : '') + (extraLargo ? ' extra-larga' : ''), role: 'dialog', 'aria-modal': 'true' },
     h('div', { class: 'janela-topo' }, h('h2', {}, titulo), h('button', { class: 'btn-icone', 'aria-label': 'Fechar', onclick: () => fechar() }, '×')),
     h('div', { class: 'janela-corpo' }, conteudo));
   fundo.append(janela);
-  const esc = (e) => { if (e.key === 'Escape') fechar(); };
-  document.addEventListener('keydown', esc);
-  function fechar() { fundo.remove(); document.removeEventListener('keydown', esc); }
+  function fechar() { fundo.remove(); }
   document.body.append(fundo);
   setTimeout(() => janela.querySelector('input,select,textarea')?.focus(), 30);
   return fechar;
