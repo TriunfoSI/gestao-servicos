@@ -1,10 +1,11 @@
 import { sb, st, h, limpar, q, aviso, tabela, etiqueta, fmtData, fmtDataHora, editarRegistro, abrirJanela, formulario,
   opcoesEquipe, eGestor, perfil, botao } from '../base.js';
 
-export const SIT_TAREFA = ['A fazer', 'Em andamento', 'Apoio técnico', 'Aguardando terceiros', 'Subtarefas', 'Concluída', 'Cancelada'];
-// "Subtarefas" é automática (o banco coloca quando a tarefa tem subtarefas em aberto e tira quando todas terminam):
-// só aparece na lista de escolha quando a tarefa já está nessa situação
-const situacoesEscolha = (atual) => SIT_TAREFA.filter((s) => s !== 'Subtarefas' || atual === 'Subtarefas');
+export const SIT_TAREFA = ['A fazer', 'Em andamento', 'Apoio técnico', 'Aguardando terceiros', 'Subtarefas', 'Subtarefas concluídas', 'Concluída', 'Cancelada'];
+// "Subtarefas" e "Subtarefas concluídas" são automáticas (o banco coloca conforme as subtarefas):
+// só aparecem na lista de escolha quando a tarefa já está nessa situação
+const AUTOMATICAS = ['Subtarefas', 'Subtarefas concluídas'];
+const situacoesEscolha = (atual) => SIT_TAREFA.filter((s) => !AUTOMATICAS.includes(s) || s === atual);
 export const PRIORIDADES = ['Alta', 'Média', 'Baixa'];
 
 // Situação da tarefa comparada ao prazo (mesma lógica dos prazos):
@@ -108,7 +109,7 @@ export async function abrirTarefa(id, depois) {
     subs.length ? [
       h('h3', {}, 'Subtarefas ', h('small', {}, `· ${t.subtarefas_concluidas} de ${t.subtarefas_total} concluídas`)),
       subsAbertas.length && t.situacao !== 'Concluída'
-        ? h('p', { class: 'ajuda' }, 'A situação desta tarefa fica em "Subtarefas" até que todas as subtarefas sejam concluídas ou canceladas. Depois ela volta sozinha para "Em andamento" e você pode concluí-la.') : null,
+        ? h('p', { class: 'ajuda' }, 'A situação desta tarefa fica em "Subtarefas" até que todas as subtarefas sejam concluídas ou canceladas. Depois ela passa sozinha para "Subtarefas concluídas" e pode ser concluída.') : null,
       tabela([
         { rotulo: 'Subtarefa', k: 'descricao', classe: 'texto' },
         { rotulo: 'Responsável', k: 'responsavel_nome' },

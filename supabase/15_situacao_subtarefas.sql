@@ -4,10 +4,10 @@
 --     sozinha para "Subtarefas": o responsável continua com a tarefa
 --     aberta, acompanhando, sabendo que as subtarefas ainda não terminaram.
 --   - Quando todas as subtarefas forem concluídas ou canceladas (ou
---     desvinculadas/excluídas), a tarefa volta sozinha para "Em andamento"
---     e o responsável a conclui manualmente.
---   - Se uma subtarefa for reaberta, a tarefa de origem volta para "Subtarefas".
---   - "Subtarefas" não pode ser escolhida à mão, e enquanto houver
+--     desvinculadas/excluídas), a tarefa passa sozinha para
+--     "Subtarefas concluídas" (amarelo) e o responsável a conclui manualmente.
+--   - Se uma subtarefa for reaberta (ou criada), a tarefa de origem volta para "Subtarefas".
+--   - "Subtarefas" e "Subtarefas concluídas" não podem ser escolhidas à mão, e enquanto houver
 --     subtarefas em aberto a tarefa de origem só pode sair dessa situação
 --     para "Cancelada" (concluir continua travado, como no script 14).
 --   - Tarefas que já têm subtarefas em aberto passam para "Subtarefas".
@@ -16,7 +16,7 @@
 
 alter table tarefa drop constraint if exists tarefa_situacao_check;
 alter table tarefa add constraint tarefa_situacao_check
-  check (situacao in ('A fazer','Em andamento','Apoio técnico','Aguardando terceiros','Subtarefas','Concluída','Cancelada'));
+  check (situacao in ('A fazer','Em andamento','Apoio técnico','Aguardando terceiros','Subtarefas','Subtarefas concluídas','Concluída','Cancelada'));
 
 -- quantas subtarefas em aberto a tarefa tem
 create or replace function tarefa_subtarefas_abertas(p_id bigint) returns int
@@ -58,6 +58,10 @@ begin
   if new.situacao = 'Subtarefas' and (tg_op = 'INSERT' or old.situacao is distinct from 'Subtarefas') and abertas = 0 then
     raise exception 'A situação "Subtarefas" é automática: ela é usada quando a tarefa tem subtarefas em aberto.';
   end if;
+  if new.situacao = 'Subtarefas concluídas' and (tg_op = 'INSERT' or old.situacao is distinct from 'Subtarefas concluídas')
+     and (abertas > 0 or not exists (select 1 from tarefa where tarefa_pai_id = new.id)) then
+    raise exception 'A situação "Subtarefas concluídas" é automática: ela é usada quando todas as subtarefas da tarefa terminaram.';
+  end if;
   if tg_op = 'UPDATE' and old.situacao = 'Subtarefas' and new.situacao not in ('Subtarefas', 'Cancelada', 'Concluída') and abertas > 0 then
     raise exception 'Esta tarefa tem % subtarefa(s) em aberto e fica na situação "Subtarefas" até que todas sejam concluídas ou canceladas.', abertas;
   end if;
@@ -86,7 +90,7 @@ begin
     update tarefa set situacao = 'Subtarefas'
      where id = p_pai and situacao not in ('Subtarefas', 'Concluída', 'Cancelada');
   else
-    update tarefa set situacao = 'Em andamento'
+    update tarefa set situacao = 'Subtarefas concluídas'
      where id = p_pai and situacao = 'Subtarefas';
   end if;
 end $$;
