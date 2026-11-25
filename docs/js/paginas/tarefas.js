@@ -1,25 +1,33 @@
 import { sb, st, h, limpar, q, aviso, tabela, etiqueta, fmtData, fmtDataHora, editarRegistro, abrirJanela, formulario,
   opcoesEquipe, eGestor, perfil, botao } from '../base.js';
 
-export const SIT_TAREFA = ['A fazer', 'Em andamento', 'Apoio técnico', 'Aguardando terceiros', 'Subtarefas', 'Subtarefas concluídas', 'Concluída', 'Cancelada'];
-// "Subtarefas" e "Subtarefas concluídas" são automáticas (o banco coloca conforme as subtarefas):
+export const SIT_TAREFA = ['A fazer', 'Em andamento', 'Apoio técnico', 'Respondida', 'Aguardando terceiros', 'Subtarefas', 'Subtarefas concluídas', 'Concluída', 'Cancelada'];
+// "Subtarefas" e "Subtarefas concluídas" são automáticas (o banco coloca conforme as subtarefas),
+// e "Respondida" também (quando o apoio técnico recebe a resposta):
 // só aparecem na lista de escolha quando a tarefa já está nessa situação
-const AUTOMATICAS = ['Subtarefas', 'Subtarefas concluídas'];
+const AUTOMATICAS = ['Respondida', 'Subtarefas', 'Subtarefas concluídas'];
 const situacoesEscolha = (atual) => SIT_TAREFA.filter((s) => !AUTOMATICAS.includes(s) || s === atual);
 export const PRIORIDADES = ['Alta', 'Média', 'Baixa'];
 
 // Situação da tarefa comparada ao prazo (mesma lógica dos prazos):
 // concluída mostra "Concluída" ou "Concluída fora do prazo"; aberta com prazo passado ganha "Vencida"
+// Pedido de apoio técnico respondido aparece como "Retorno recebido" para quem pediu
+export const retornoParaMim = (t) => t.situacao === 'Respondida' && t.solicitante_id != null && t.solicitante_id === st.eu?.id;
+
 export function etiquetaTarefa(t) {
   if (t.situacao === 'Concluída') return etiqueta(t.situacao_prazo || 'Concluída');
+  if (retornoParaMim(t)) return etiqueta('Retorno recebido');
+  if (t.situacao === 'Respondida') return etiqueta(t.situacao_prazo || 'Respondida');
   return h('span', { class: 'etiquetas' }, etiqueta(t.situacao), t.situacao_prazo === 'Vencida' ? etiqueta('Vencida') : null);
 }
 
 // Texto da tarefa nas listas, com o vínculo: "↳ subtarefa de ..." e/ou "2 de 3 subtarefas concluídas"
+// e, no apoio técnico, quem pediu
 export function textoTarefa(t) {
   const sub = t.tarefa_pai_id ? h('small', { class: 'vinculo' }, '↳ Subtarefa de: ', resumo(t.tarefa_pai_descricao, 60)) : null;
   const cont = t.subtarefas_total ? h('small', { class: 'vinculo' }, `${t.subtarefas_concluidas} de ${t.subtarefas_total} subtarefas concluídas`) : null;
-  return sub || cont ? h('div', {}, t.descricao, sub, cont) : t.descricao;
+  const solic = t.solicitante_id ? h('small', { class: 'vinculo' }, 'Apoio técnico pedido por ', t.solicitante_nome || '—') : null;
+  return sub || cont || solic ? h('div', {}, t.descricao, solic, sub, cont) : t.descricao;
 }
 
 async function opcoesOS() {
@@ -57,8 +65,28 @@ export async function editarTarefa(registro, depois, osId, pai) {
       { k: 'situacao', rotulo: 'Situação', tipo: 'opcoes', opcoes: situacoesEscolha(registro?.situacao), obrig: true, numerico: false, padrao: 'A fazer',
         ajuda: registro?.situacao === 'Subtarefas' ? 'Fica em "Subtarefas" até que todas as subtarefas sejam concluídas ou canceladas.' : null },
       { k: 'data_atendimento', rotulo: 'Data de atendimento', tipo: 'data', ajuda: 'Preenchida sozinha quando a tarefa é concluída. Pode ser corrigida aqui.' },
+      { k: 'solicitante_id', rotulo: 'Solicitante (apoio técnico)', tipo: 'opcoes', opcoes: opcoesEquipe,
+        ajuda: 'Quem pediu o apoio técnico e recebe a resposta. Em branco, numa tarefa em "Apoio técnico", fica quem está cadastrando.' },
       { k: 'orientacao_tecnica', rotulo: 'Orientação técnica', tipo: 'area', linhas: 4, ajuda: 'Orientação da coordenação para o técnico executar a tarefa.' },
       { k: 'observacao', rotulo: 'Observação', tipo: 'area', linhas: 2 },
+    ].filter(Boolean) });
+}
+
+// Pedido de apoio técnico: qualquer pessoa da equipe pode pedir. Quem pede fica como
+// solicitante e recebe a resposta de volta ("Retorno recebido" no Início).
+export async function pedirApoio(depois, osId) {
+  const listaOS = osId ? [] : await opcoesOS();
+  return editarRegistro({ titulo: 'pedido de apoio técnico', tabela: 'tarefa', depois, podeExcluir: false,
+    extras: { situacao: 'Apoio técnico', ...(osId ? { os_id: osId } : {}) },
+    campos: [
+      { tipo: 'info', rotulo: 'Descreva a situação e o que precisa ser definido, orientado ou decidido. Quando a pessoa responder, a resposta volta para você no Início ("Retorno recebido"), e você conclui o pedido depois de ler.' },
+      osId ? null : { k: 'os_id', rotulo: 'OS (deixe em branco se não for de uma OS)', tipo: 'opcoes', opcoes: listaOS, largura: 2 },
+      { k: 'descricao', rotulo: 'O que precisa ser definido', tipo: 'area', obrig: true, linhas: 4 },
+      { k: 'responsavel_id', rotulo: 'Quem vai responder', tipo: 'opcoes', opcoes: opcoesEquipe, obrig: true },
+      { k: 'prioridade', rotulo: 'Prioridade', tipo: 'opcoes', opcoes: PRIORIDADES, obrig: true, numerico: false, padrao: 'Média' },
+      { k: 'prazo', rotulo: 'Prazo para a resposta', tipo: 'data' },
+      eGestor() ? { k: 'solicitante_id', rotulo: 'Solicitante', tipo: 'opcoes', opcoes: opcoesEquipe, obrig: true, padrao: st.eu.id,
+        ajuda: 'Troque se estiver registrando o pedido de outra pessoa.' } : null,
     ].filter(Boolean) });
 }
 
@@ -71,7 +99,10 @@ export async function abrirTarefa(id, depois) {
   ]);
   const subsAbertas = subs.filter((s) => !['Concluída', 'Cancelada'].includes(s.situacao));
   // quem pode criar tarefa vinculada: coordenação ou o responsável pela OS (mesma regra da "Nova tarefa")
-  const podeVincular = !['Concluída', 'Cancelada'].includes(t.situacao) && (eGestor() || (t.os_id && t.os_responsavel_id === st.eu.id));
+  // e quem pediu um apoio técnico (para os desdobramentos da decisão)
+  const souSolicitante = t.solicitante_id != null && t.solicitante_id === st.eu.id;
+  const podeVincular = !['Concluída', 'Cancelada'].includes(t.situacao) && (eGestor() || (t.os_id && t.os_responsavel_id === st.eu.id) || souSolicitante);
+  const podeResponder = t.situacao === 'Apoio técnico' && (eGestor() || t.responsavel_id === st.eu.id);
   const reabrir = () => { fechar(); abrirTarefa(id, depois); };
   const quem = (uid) => st.listas.equipe.find((e) => e.user_id === uid)?.nome || '';
   let fechar;
@@ -90,12 +121,53 @@ export async function abrirTarefa(id, depois) {
       aviso('Tarefa atualizada.'); fechar(); depois && depois();
     },
   });
-  fechar = abrirJanela('Tarefa', h('div', {},
+  // Responder o apoio técnico (responsável ou coordenação)
+  const responder = podeResponder ? formulario([
+    { k: 'resposta', rotulo: 'Resposta/Decisão', tipo: 'area', linhas: 4, obrig: true,
+      ajuda: t.solicitante_nome ? `A resposta volta para ${t.solicitante_nome}, que conclui o pedido depois de ler.` : 'A resposta fica registrada na tarefa.' },
+  ], {}, {
+    rotuloSalvar: 'Enviar resposta',
+    aoSalvar: async (d) => {
+      await q(sb.from('tarefa').update({ resposta: d.resposta }).eq('id', id));
+      aviso(t.solicitante_nome ? `Resposta enviada para ${t.solicitante_nome}.` : 'Resposta registrada.'); fechar(); depois && depois();
+    },
+  }) : null;
+  // Quem pediu: ler a resposta e concluir, ou pedir mais esclarecimento
+  const esclarecer = formulario([
+    { k: 'comentario', rotulo: 'O que ainda precisa ser esclarecido', tipo: 'area', linhas: 3, obrig: true },
+  ], {}, {
+    rotuloSalvar: 'Devolver para resposta',
+    aoSalvar: async (d) => {
+      await q(sb.from('tarefa').update({ situacao: 'Apoio técnico' }).eq('id', id));
+      await q(sb.from('tarefa_atualizacao').insert({ tarefa_id: id, situacao: 'Apoio técnico', comentario: d.comentario }));
+      aviso('Pedido devolvido para nova resposta.'); fechar(); depois && depois();
+    },
+  });
+  esclarecer.hidden = true;
+  const concluirPedido = async () => {
+    await q(sb.from('tarefa').update({ situacao: 'Concluída' }).eq('id', id));
+    aviso('Pedido de apoio técnico concluído.'); fechar(); depois && depois();
+  };
+  const retorno = t.situacao === 'Respondida' && (souSolicitante || eGestor()) ? h('div', { class: 'retorno-apoio' },
+    h('p', {}, h('strong', {}, souSolicitante ? 'Retorno recebido. ' : 'Pedido respondido. '),
+      souSolicitante ? 'Leia a resposta acima. Se resolveu, conclua o pedido. Se gerou algo a fazer, crie uma tarefa vinculada.'
+        : `Aguardando ${t.solicitante_nome || 'quem pediu'} ler a resposta e concluir.`),
+    h('div', { class: 'acoes esquerda' },
+      botao('Li a resposta, concluir', concluirPedido, 'primario'),
+      souSolicitante ? botao('Pedir mais esclarecimento', () => { esclarecer.hidden = false; esclarecer.querySelector('textarea')?.focus(); }) : null),
+    esclarecer) : null;
+  const blocoResposta = t.resposta ? h('div', { class: 'resposta-apoio' },
+    h('div', { class: 'rotulo-detalhe' }, 'Resposta/Decisão'),
+    h('p', { class: 'pre' }, t.resposta),
+    h('small', {}, [t.respondido_por_nome, t.respondido_em ? fmtDataHora(t.respondido_em) : null].filter(Boolean).join(' · '))) : null;
+
+  fechar = abrirJanela(t.solicitante_id ? 'Apoio técnico' : 'Tarefa', h('div', {},
     h('p', { class: 'pre tarefa-desc' }, t.descricao),
     h('dl', { class: 'detalhes compacto' },
       h('dt', {}, 'OS'), h('dd', {}, t.os_id ? h('a', { href: `#/os/${t.os_id}/tarefas`, onclick: () => fechar() }, `${t.os_numero} — ${t.cliente_curto}`) : 'Tarefa geral'),
       t.tarefa_pai_id ? [h('dt', {}, 'Tarefa de origem'), h('dd', {}, h('a', { href: '#', onclick: (e) => { e.preventDefault(); fechar(); abrirTarefa(t.tarefa_pai_id, depois); } }, resumo(t.tarefa_pai_descricao, 120) || 'Abrir'))] : null,
-      h('dt', {}, 'Responsável'), h('dd', {}, t.responsavel_nome || '—'),
+      t.solicitante_id ? [h('dt', {}, 'Pedido por'), h('dd', {}, t.solicitante_nome || '—')] : null,
+      h('dt', {}, t.solicitante_id ? 'Quem responde' : 'Responsável'), h('dd', {}, t.responsavel_nome || '—'),
       h('dt', {}, 'Prioridade'), h('dd', {}, etiqueta(t.prioridade)),
       h('dt', {}, 'Data de criação'), h('dd', {}, fmtData(t.data_reuniao) || '—'),
       h('dt', {}, 'Prazo'), h('dd', {}, fmtData(t.prazo) || '—'),
@@ -103,6 +175,8 @@ export async function abrirTarefa(id, depois) {
       t.data_atendimento ? [h('dt', {}, 'Data de atendimento'), h('dd', {}, fmtData(t.data_atendimento))] : null,
       t.orientacao_tecnica ? [h('dt', {}, 'Orientação técnica'), h('dd', { class: 'pre' }, t.orientacao_tecnica)] : null,
       t.observacao ? [h('dt', {}, 'Observação'), h('dd', { class: 'pre' }, t.observacao)] : null),
+    blocoResposta, retorno,
+    responder ? [h('h3', {}, 'Responder'), responder] : null,
     eGestor() || podeVincular ? h('div', { class: 'acoes esquerda' },
       eGestor() ? botao('Editar tarefa', () => { fechar(); editarTarefa(t, depois); }) : null,
       podeVincular ? botao('Criar tarefa vinculada', () => { fechar(); editarTarefa(null, () => { reabrir(); depois && depois(); }, null, t); }) : null) : null,
@@ -117,7 +191,7 @@ export async function abrirTarefa(id, depois) {
         { rotulo: 'Situação', f: etiquetaTarefa, k: 'situacao' },
       ], subs, { aoClicar: (s) => { fechar(); abrirTarefa(s.id, depois); } }),
     ] : null,
-    h('h3', {}, 'Atualizar'), atualizar,
+    retorno ? null : [h('h3', {}, 'Atualizar'), atualizar],
     hist.length ? [h('h3', {}, 'Histórico'), h('ul', { class: 'historico' }, hist.map((a) => h('li', {},
       h('small', {}, fmtDataHora(a.em), ' · ', quem(a.usuario_id) || 'sistema'), a.situacao ? [' ', etiqueta(a.situacao)] : null,
       a.comentario ? h('p', { class: 'pre' }, a.comentario) : null)))] : null), { largo: true });
@@ -125,7 +199,8 @@ export async function abrirTarefa(id, depois) {
 
 export async function paginaTarefas(el) {
   const tecnico = perfil() === 'tecnico';
-  const resp = h('select', {}, h('option', { value: '' }, 'Todos os responsáveis'), opcoesEquipe().map(([v, t]) => h('option', { value: v }, t)));
+  const resp = h('select', {}, h('option', { value: '' }, 'Todos os responsáveis'), h('option', { value: 'pedi' }, 'Apoios técnicos que pedi'),
+    opcoesEquipe().map(([v, t]) => h('option', { value: v }, t)));
   if (tecnico) resp.value = st.eu.id;
   const sit = h('select', {}, h('option', { value: 'abertas' }, 'Abertas'), h('option', { value: '' }, 'Todas'), SIT_TAREFA.map((s) => h('option', {}, s)));
   const prio = h('select', {}, h('option', { value: '' }, 'Todas as prioridades'), PRIORIDADES.map((p) => h('option', {}, p)));
@@ -137,7 +212,10 @@ export async function paginaTarefas(el) {
 
   async function carregar() {
     let c = sb.from('v_tarefa').select('*').order('prazo', { nullsFirst: false }).order('data_reuniao', { ascending: false });
-    if (resp.value) c = c.eq('responsavel_id', resp.value);
+    if (resp.value === 'pedi') c = c.eq('solicitante_id', st.eu.id);
+    // as minhas: também os apoios técnicos que pedi
+    else if (resp.value && String(resp.value) === String(st.eu.id)) c = c.or(`responsavel_id.eq.${st.eu.id},solicitante_id.eq.${st.eu.id}`);
+    else if (resp.value) c = c.eq('responsavel_id', resp.value);
     if (sit.value === 'abertas') c = c.not('situacao', 'in', '("Concluída","Cancelada")');
     else if (sit.value) c = c.eq('situacao', sit.value);
     if (prio.value) c = c.eq('prioridade', prio.value);
@@ -161,8 +239,10 @@ export async function paginaTarefas(el) {
   [resp, sit, prio, criadoDe, criadoAte, atualDe, atualAte].forEach((x) => x.addEventListener('change', carregar));
   const limparFiltros = botao('Limpar filtros', () => { [criadoDe, criadoAte, atualDe, atualAte].forEach((x) => { x.value = ''; }); prio.value = ''; carregar(); });
   limpar(el, h('div', { class: 'titulo-pagina' }, h('h1', {}, 'Tarefas'),
-    eGestor() ? botao('Nova tarefa', () => editarTarefa(null, carregar), 'primario') : null),
-  h('p', { class: 'ajuda' }, 'Tarefas definidas nas reuniões técnicas. Clique numa tarefa para ver a orientação técnica, atualizar a situação e deixar o comentário do técnico. Clique no título de uma coluna para ordenar (clique de novo para inverter).'),
+    h('div', { class: 'acoes-topo' },
+      botao('Pedir apoio técnico', () => pedirApoio(carregar)),
+      eGestor() ? botao('Nova tarefa', () => editarTarefa(null, carregar), 'primario') : null)),
+  h('p', { class: 'ajuda' }, 'Tarefas definidas nas reuniões técnicas. Clique numa tarefa para ver a orientação técnica, atualizar a situação e deixar o comentário do técnico. Em "Pedir apoio técnico", qualquer pessoa pede uma definição ou decisão a alguém; a resposta volta para quem pediu. Clique no título de uma coluna para ordenar (clique de novo para inverter).'),
   h('div', { class: 'filtros' }, resp, sit, prio, periodo('Criada de', criadoDe, criadoAte), periodo('Atualizada de', atualDe, atualAte), limparFiltros), area);
   await carregar();
 }

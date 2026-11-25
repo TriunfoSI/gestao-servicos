@@ -1,5 +1,5 @@
 import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, fmtReais, perfil, cartao } from '../base.js';
-import { abrirTarefa, etiquetaTarefa } from './tarefas.js';
+import { abrirTarefa, etiquetaTarefa, retornoParaMim } from './tarefas.js';
 
 // Situação automática da OS (calculada no banco pela visão v_os_situacao):
 //   Pendência (vermelho)       -> algo técnico vencido (prazo, cronograma, verificação, tarefa, ART)
@@ -76,7 +76,7 @@ function tabelaTarefas(tarefas, soMeu, recarregar) {
     const texto = h('div', { class: 'resumo-3', title: t.descricao || '' }, t.descricao || '');
     // aberta: mostra o texto inteiro da tarefa
     const alternar = () => { detalhe.hidden = !detalhe.hidden; seta.textContent = detalhe.hidden ? '▸' : '▾'; texto.classList.toggle('resumo-3', detalhe.hidden); };
-    corpo.append(h('tr', { class: t.situacao === 'Concluída' ? 'concluida' : null, tabIndex: 0, title: 'Clique para ver OS, cliente e prioridade', onclick: alternar,
+    corpo.append(h('tr', { class: t.situacao === 'Concluída' ? 'concluida' : retornoParaMim(t) ? 'retorno' : null, tabIndex: 0, title: 'Clique para ver OS, cliente e prioridade', onclick: alternar,
       onkeydown: (e) => { if (e.key === 'Enter') alternar(); } },
       h('td', { 'data-rotulo': 'Tarefa', class: 'texto' }, h('div', { class: 'com-seta' }, seta, texto)),
       h('td', { 'data-rotulo': 'Situação' }, etiquetaTarefa(t))), detalhe);
@@ -111,11 +111,16 @@ export async function paginaPainel(el) {
     .or(`situacao.neq.Concluída,data_atendimento.gte.${ha15dias}`)
     .order('prioridade_ordem').order('prazo', { nullsFirst: false });
   if (soMeu || fin) tarefasQ = tarefasQ.eq('responsavel_id', meuId);
+  // pedidos de apoio técnico que eu fiz e já foram respondidos ("Retorno recebido")
+  const retornosQ = sb.from('v_tarefa').select('*').eq('solicitante_id', meuId).eq('situacao', 'Respondida').order('respondido_em');
 
   const canceladasQ = sb.from('os').select('id').eq('sit_contrato', 'Cancelado');
 
-  const [todasOs, prazosTodos, tarefasTodas, parcelasTodas, canceladas] = await Promise.all(
-    [q(osQ), q(prazosQ), q(tarefasQ), parcelasQ ? q(parcelasQ) : [], q(canceladasQ)]);
+  const [todasOs, prazosTodos, tarefasResp, parcelasTodas, canceladas, retornos] = await Promise.all(
+    [q(osQ), q(prazosQ), q(tarefasQ), parcelasQ ? q(parcelasQ) : [], q(canceladasQ), q(retornosQ)]);
+  // os retornos vão para o topo do quadro de tarefas (sem repetir)
+  const idsRetorno = new Set(retornos.map((t) => t.id));
+  const tarefasTodas = [...retornos, ...tarefasResp.filter((t) => !idsRetorno.has(t.id))];
   const idsCanceladas = new Set(canceladas.map((o) => o.id));
   const semCanceladas = (lista) => lista.filter((x) => !idsCanceladas.has(x.os_id));
   const prazosBase = semCanceladas(prazosTodos);
@@ -189,8 +194,17 @@ export async function paginaPainel(el) {
     h('div', { class: 'secao-topo' }, h('h3', {}, titulo, detalhe), h('a', { href }, 'Ver tudo')),
     conteudo);
 
+  // aviso de retorno do apoio técnico
+  const avisoRetorno = retornos.length ? h('div', { class: 'alerta roxo retorno-aviso' },
+    h('strong', {}, retornos.length === 1 ? 'Retorno recebido:' : `${retornos.length} retornos recebidos:`),
+    retornos.length === 1 ? 'seu pedido de apoio técnico foi respondido.' : 'seus pedidos de apoio técnico foram respondidos.',
+    h('ul', {}, retornos.map((t) => h('li', {}, h('a', { href: '#/', onclick: (e) => { e.preventDefault(); abrirTarefa(t.id, () => paginaPainel(el)); } },
+      (t.descricao || '').replace(/\s+/g, ' ').slice(0, 90)), t.respondido_por_nome ? ` · respondido por ${t.respondido_por_nome}` : ''))),
+    h('small', {}, 'Abra para ler a resposta e concluir o pedido.')) : null;
+
   limpar(el,
     h('h1', {}, `Olá, ${st.eu.nome.split(' ')[0]}`),
+    avisoRetorno,
     cartoes,
     h('div', { class: 'tres-quadros' },
       quadro(soMeu ? 'Minhas OS' : fin ? 'OS com pendência comercial' : 'Ordens de serviço', tituloOs, '#/os', caixaOs),

@@ -5,7 +5,7 @@ import {
 } from '../base.js';
 import { editarPrazo, colunasPrazo, ordenarPrazos, podeAbrirPrazo } from './prazos.js';
 import { editarAtividade, colunasCronograma, editarCronogramaEmTabela, atividadesDaOS } from './cronograma.js';
-import { editarTarefa, abrirTarefa, etiquetaTarefa, textoTarefa } from './tarefas.js';
+import { editarTarefa, abrirTarefa, etiquetaTarefa, textoTarefa, pedirApoio } from './tarefas.js';
 import { abaFinanceiro } from './financeiro.js';
 
 export const SIT_TECNICA = ['Não iniciado', 'Em andamento', 'Paralisado', 'Finalizado', 'Cancelado'];
@@ -336,6 +336,7 @@ async function abaTarefas(el, ctx) {
   const linhas = await q(sb.from('v_tarefa').select('*').eq('os_id', os.id).order('situacao').order('prazo', { nullsFirst: false }));
   const recarregar = () => abaTarefas(el, ctx);
   limpar(el, secao('Tarefas',
+    botao('Pedir apoio técnico', () => pedirApoio(recarregar, os.id)),
     podeEditar ? botao('Nova tarefa', () => editarTarefa(null, recarregar, os.id), 'primario') : null,
     tabela([
       { rotulo: 'Tarefa', f: textoTarefa, k: 'descricao', classe: 'texto' },
