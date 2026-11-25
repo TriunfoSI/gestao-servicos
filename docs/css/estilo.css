@@ -286,3 +286,15 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
 .tres-quadros .tabela-tarefas { table-layout: auto; }
 .tabela-tarefas tr.concluida td { color: var(--suave); }
 .etiquetas { display: inline-flex; flex-wrap: wrap; gap: .2rem; justify-content: flex-end; }
+
+/* Apoio técnico: resposta e retorno para quem pediu */
+.acoes-topo { display: flex; gap: .5rem; flex-wrap: wrap; }
+.resposta-apoio { background: var(--roxo-f); border-left: 4px solid var(--roxo); border-radius: 8px; padding: .7rem 1rem; margin: .75rem 0; }
+.resposta-apoio p { margin: .3rem 0; }
+.resposta-apoio small { color: var(--suave); }
+.retorno-apoio { border: 1px solid var(--laranja); background: var(--laranja-f); border-radius: 8px; padding: .7rem 1rem; margin: .75rem 0; }
+.retorno-apoio p { margin: 0 0 .5rem; }
+.retorno-apoio .form { margin-top: .75rem; }
+.retorno-aviso ul { margin: .2rem 0; padding-left: 1.2rem; flex-basis: 100%; }
+.retorno-aviso small { flex-basis: 100%; }
+.tabela-tarefas tr.retorno td { background: var(--laranja-f); }

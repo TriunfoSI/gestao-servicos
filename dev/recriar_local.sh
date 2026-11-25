@@ -15,7 +15,7 @@ docker run -d --name gotrue --add-host=host.docker.internal:host-gateway -p 9999
  -e GOTRUE_SITE_URL=http://localhost:8000 -e GOTRUE_JWT_SECRET=$JWT -e GOTRUE_JWT_EXP=3600 -e GOTRUE_JWT_AUD=authenticated -e GOTRUE_JWT_DEFAULT_GROUP_NAME=authenticated \
  -e GOTRUE_MAILER_AUTOCONFIRM=true -e GOTRUE_DISABLE_SIGNUP=false supabase/gotrue:v2.164.0 >/dev/null
 for i in $(seq 1 30); do curl -sf localhost:9999/health >/dev/null && break; sleep 1; done
-for f in 01_estrutura 02_regras_e_permissoes 03_visoes_e_relatorios 05_tarefa_prioridade 06_prazo_cronograma 07_ajustes_teste_piloto 08_verificacao_e_situacao_os 09_parcela_atrasada_na_situacao 10_cronograma_padrao_e_contrato 11_tarefa_data_atendimento 12_paralisadas_art_excluir_equipe 13_os_cancelada 14_subtarefas 15_situacao_subtarefas; do psql -h localhost -U postgres -d sgs -v ON_ERROR_STOP=1 -q -f "$DIR/supabase/$f.sql"; done
+for f in 01_estrutura 02_regras_e_permissoes 03_visoes_e_relatorios 05_tarefa_prioridade 06_prazo_cronograma 07_ajustes_teste_piloto 08_verificacao_e_situacao_os 09_parcela_atrasada_na_situacao 10_cronograma_padrao_e_contrato 11_tarefa_data_atendimento 12_paralisadas_art_excluir_equipe 13_os_cancelada 14_subtarefas 15_situacao_subtarefas 16_apoio_tecnico_retorno; do psql -h localhost -U postgres -d sgs -v ON_ERROR_STOP=1 -q -f "$DIR/supabase/$f.sql"; done
 psql -h localhost -U postgres -d sgs -v ON_ERROR_STOP=1 -q -f "$DADOS"
 docker run -d --name postgrest --add-host=host.docker.internal:host-gateway -p 3000:3000 \
  -e PGRST_DB_URI=postgres://authenticator:dev@host.docker.internal:5432/sgs -e PGRST_DB_SCHEMAS=public \
