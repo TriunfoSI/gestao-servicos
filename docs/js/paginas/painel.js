@@ -1,4 +1,4 @@
-import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, fmtReais, perfil, cartao } from '../base.js';
+import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, fmtReais, perfil, cartao, chaveOS } from '../base.js';
 import { abrirTarefa, etiquetaTarefa, retornoParaMim } from './tarefas.js';
 
 // Situação automática da OS (calculada no banco pela visão v_os_situacao):
@@ -143,7 +143,7 @@ export async function paginaPainel(el) {
 
   oss.sort((a, b) => (ORDEM_SITUACAO[a.situacao] - ORDEM_SITUACAO[b.situacao])
     || String(a.data_mais_proxima || '9999').localeCompare(String(b.data_mais_proxima || '9999'))
-    || String(a.os_numero).localeCompare(String(b.os_numero), 'pt-BR', { numeric: true }));
+    || chaveOS(a.os_numero).localeCompare(chaveOS(b.os_numero)));
   const comPendencia = oss.filter((o) => o.situacao === 'Pendência' || o.situacao === 'Pendência Comercial');
   const pendComercial = comPendencia.filter((o) => o.situacao === 'Pendência Comercial').length;
   const ativas = oss.filter((o) => o.sit_contrato !== 'Encerrado');   // encerradas só aparecem se a ART não foi baixada
@@ -186,7 +186,7 @@ export async function paginaPainel(el) {
   // ------------------------------------------------ quadros Prazos e Tarefas
   const colPrazo = [
     { rotulo: 'Data', ord: (p) => p.data_termino, f: (p) => h('span', { class: p.situacao === 'Vencido' ? 'txt-vermelho nowrap' : 'nowrap' }, fmtData(p.data_termino)) },
-    { rotulo: 'OS', ord: (p) => p.os_numero, f: (p) => h('a', { href: `#/os/${p.os_id}/${p.aba || 'prazos'}`, class: 'nowrap' }, p.os_numero || '—') },
+    { rotulo: 'OS', ord: (p) => chaveOS(p.os_numero), f: (p) => h('a', { href: `#/os/${p.os_id}/${p.aba || 'prazos'}`, class: 'nowrap' }, p.os_numero || '—') },
     { rotulo: 'Descrição', k: 'descricao', classe: 'texto', f: (p) => h('div', { class: 'resumo-3', title: p.descricao || '' }, p.descricao || '') },
     { rotulo: 'Situação', k: 'situacao', f: (p) => etiqueta(p.situacao) },
   ];

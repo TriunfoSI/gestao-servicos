@@ -1,5 +1,5 @@
 import { sb, st, h, limpar, q, aviso, tabela, etiqueta, fmtData, editarRegistro, opcoesEquipe, opcoesLista,
-  eGestor, perfil, botao, abrirJanela, somarDiasUteis } from '../base.js';
+  eGestor, perfil, botao, abrirJanela, somarDiasUteis, chaveOS } from '../base.js';
 
 // Cronograma: atividades com período para cumprir o escopo técnico da OS.
 export const SIT_CRONO = ['Não iniciada', 'Em andamento', 'Concluída'];
@@ -14,7 +14,7 @@ export function daquiDoisMeses() {
 export function colunasCronograma({ comOS = true, comCliente = comOS } = {}) {
   return [
     { rotulo: 'Atividade', k: 'descricao', classe: 'texto' },
-    comOS && { rotulo: 'OS', ord: (a) => a.os_numero, f: (a) => h('a', { href: `#/os/${a.os_id}/cronograma`, onclick: (e) => e.stopPropagation() }, a.os_numero || '—') },
+    comOS && { rotulo: 'OS', ord: (a) => chaveOS(a.os_numero), f: (a) => h('a', { href: `#/os/${a.os_id}/cronograma`, onclick: (e) => e.stopPropagation() }, a.os_numero || '—') },
     comCliente && { rotulo: 'Cliente', k: 'cliente_curto' },
     { rotulo: 'Início', ord: (a) => a.data_inicio, f: (a) => fmtData(a.data_inicio) },
     { rotulo: 'Término', ord: (a) => a.data_termino, f: (a) => h('span', { class: a.atrasada ? 'txt-vermelho' : '' }, fmtData(a.data_termino)) },

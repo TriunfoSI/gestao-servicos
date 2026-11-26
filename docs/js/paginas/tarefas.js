@@ -1,5 +1,5 @@
 import { sb, st, h, limpar, q, aviso, tabela, etiqueta, fmtData, fmtDataHora, editarRegistro, abrirJanela, formulario,
-  opcoesEquipe, eGestor, perfil, botao } from '../base.js';
+  opcoesEquipe, eGestor, perfil, botao, chaveOS } from '../base.js';
 
 export const SIT_TAREFA = ['A fazer', 'Em andamento', 'Apoio técnico', 'Respondida', 'Aguardando terceiros', 'Subtarefas', 'Subtarefas concluídas', 'Concluída', 'Cancelada'];
 // "Subtarefas" e "Subtarefas concluídas" são automáticas (o banco coloca conforme as subtarefas),
@@ -227,7 +227,7 @@ export async function paginaTarefas(el) {
     const hojeStr = new Date().toLocaleDateString('sv-SE');
     limpar(area, h('p', { class: 'contagem' }, `${linhas.length} tarefas`), tabela([
       { rotulo: 'Tarefa', f: textoTarefa, k: 'descricao', classe: 'texto' },
-      { rotulo: 'OS', f: (t) => t.os_numero ? `${t.os_numero} · ${t.cliente_curto}` : 'Geral', ord: (t) => t.os_numero || '' },
+      { rotulo: 'OS', f: (t) => t.os_numero ? `${t.os_numero} · ${t.cliente_curto}` : 'Geral', ord: (t) => chaveOS(t.os_numero) },
       { rotulo: 'Resp.', k: 'responsavel_iniciais' },
       { rotulo: 'Prioridade', f: (t) => etiqueta(t.prioridade), ord: (t) => t.prioridade_ordem },
       { rotulo: 'Data de criação', f: (t) => fmtData(t.data_reuniao), ord: (t) => t.data_reuniao },

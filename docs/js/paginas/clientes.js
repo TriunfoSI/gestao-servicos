@@ -1,4 +1,4 @@
-import { sb, h, limpar, q, tabela, etiqueta, editarRegistro, botao, secao, eFinanceiro, carregarListas } from '../base.js';
+import { sb, h, limpar, q, tabela, etiqueta, editarRegistro, botao, secao, eFinanceiro, carregarListas, chaveOS } from '../base.js';
 
 const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
 
@@ -77,7 +77,7 @@ export async function paginaCliente(el, id) {
       ], contatos, { aoClicar: eFinanceiro() ? (r) => editarRegistro({ titulo: 'contato', tabela: 'contato', campos: camposContato, registro: r, depois: recarregar }) : null,
         vazio: 'Nenhum contato cadastrado.' })),
     secao('Ordens de serviço', tabela([
-      { rotulo: 'Nº', k: 'numero' }, { rotulo: 'Título', k: 'titulo', classe: 'texto' }, { rotulo: 'Resp.', k: 'responsavel_iniciais' },
+      { rotulo: 'Nº', k: 'numero', ord: (o) => chaveOS(o.numero) }, { rotulo: 'Título', k: 'titulo', classe: 'texto' }, { rotulo: 'Resp.', k: 'responsavel_iniciais' },
       { rotulo: 'Técnica', f: (o) => etiqueta(o.sit_tecnica) }, { rotulo: 'Comercial', f: (o) => etiqueta(o.sit_comercial) },
       { rotulo: 'Contrato', f: (o) => etiqueta(o.sit_contrato) },
     ], oss, { aoClicar: (o) => { location.hash = `#/os/${o.id}`; }, vazio: 'Nenhuma OS que você possa ver.' })));

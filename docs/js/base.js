@@ -224,6 +224,17 @@ export function editarRegistro({ titulo, tabela, campos, registro, extras = {}, 
   return form;
 }
 
+// Chave para ordenar número de OS no padrão Número/Ano (ex.: 02/2022, 26/23):
+// primeiro o ano, depois o número, sempre numericamente. Ano com 2 dígitos vira 20xx.
+export function chaveOS(numero) {
+  if (numero == null || numero === '') return '';
+  const m = String(numero).trim().match(/^(\d+)\s*\/\s*(\d+)/);
+  if (!m) return 'z' + String(numero);   // formato fora do padrão vai para o fim
+  let ano = Number(m[2]);
+  if (ano < 100) ano += 2000;
+  return String(ano).padStart(4, '0') + '-' + m[1].padStart(8, '0');
+}
+
 // ------------------------------------------------------------------ tabela genérica
 // colunas: [{k, rotulo, f: (linha) => conteúdo, classe}]
 // Clique no título de uma coluna para ordenar (crescente / decrescente).

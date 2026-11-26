@@ -1,5 +1,5 @@
 import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, editarRegistro, opcoesEquipe, opcoesLista,
-  somarDiasUteis, eGestor, perfil, botao, hoje } from '../base.js';
+  somarDiasUteis, eGestor, perfil, botao, hoje, chaveOS } from '../base.js';
 
 // Prazos são datas únicas (prazo de órgão, comunique-se, entrega de produto, vencimento de contrato...).
 // A situação é automática:
@@ -34,7 +34,7 @@ export function colunasPrazo({ comOS = true } = {}) {
   return [
     { rotulo: 'Data', ord: (p) => p.data_termino, f: (p) => h('span', { class: p.situacao === 'Vencido' ? 'txt-vermelho' : '' }, fmtData(p.data_termino)) },
     { rotulo: 'Quando', ord: (p) => p.dias_restantes, f: quando },
-    comOS && { rotulo: 'OS', ord: (p) => p.os_numero, f: (p) => h('a', { href: `#/os/${p.os_id}/prazos`, onclick: (e) => e.stopPropagation() }, p.os_numero || '—') },
+    comOS && { rotulo: 'OS', ord: (p) => chaveOS(p.os_numero), f: (p) => h('a', { href: `#/os/${p.os_id}/prazos`, onclick: (e) => e.stopPropagation() }, p.os_numero || '—') },
     comOS && { rotulo: 'Cliente', k: 'cliente_curto' },
     { rotulo: 'Descrição', k: 'descricao', classe: 'texto' },
     { rotulo: 'Tipo', k: 'tipo' },
