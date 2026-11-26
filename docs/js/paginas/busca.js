@@ -4,7 +4,7 @@ import { abrirTarefa } from './tarefas.js';
 // Áreas onde a busca procura (a chave é a mesma usada no banco, função busca_geral)
 export const AREAS = [
   ['os', 'Ordens de serviço', 'nº, título, cliente, local, categoria e escopo'],
-  ['processos', 'Processos/Documentos', 'órgão, número, assunto e situação'],
+  ['processos', 'Documentos|Processos', 'origem, número, assunto e situação'],
   ['produtos', 'Produtos técnicos', 'título, número, tipo e descrição'],
   ['tarefas', 'Tarefas', 'tarefa, orientação técnica, observação e comentários'],
   ['andamento', 'Andamento', 'descrição e observação'],

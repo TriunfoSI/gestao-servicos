@@ -153,7 +153,7 @@ async function novaOS() {
 // ================================================================== detalhe da OS
 const ABAS = [
   ['dados', 'Dados'], ['escopo', 'Escopo'], ['cronograma', 'Cronograma'], ['prazos', 'Prazos'], ['andamento', 'Andamento'], ['tarefas', 'Tarefas'],
-  ['financeiro', 'Financeiro', eFinanceiro], ['processos', 'Processos/Documentos'], ['produtos', 'Produtos técnicos'],
+  ['financeiro', 'Financeiro', eFinanceiro], ['processos', 'Documentos|Processos'], ['produtos', 'Produtos técnicos'],
   ['link', 'Link do cliente'], ['historico', 'Histórico'],
 ];
 
@@ -182,7 +182,7 @@ export async function paginaOS(el, id, aba = 'dados') {
     artsPendentes.length ? h('div', { class: 'alerta erro' }, h('strong', {}, 'Pendência: '),
       `serviço terminado, mas ${artsPendentes.length > 1 ? 'há ARTs ainda não baixadas' : 'a ART ainda não foi baixada'}`,
       artsPendentes.some((a) => a.referencia) ? ` (${artsPendentes.map((a) => a.referencia).filter(Boolean).join(', ')})` : '', '. ',
-      h('a', { href: `#/os/${id}/processos` }, 'Ver em Processos/Documentos')) : null,
+      h('a', { href: `#/os/${id}/processos` }, 'Ver em Documentos|Processos')) : null,
     os.revisar_migracao ? h('div', { class: 'alerta roxo' }, h('strong', {}, 'Revisar: '), os.revisar_migracao) : null,
     h('nav', { class: 'abas' }, ABAS.filter(([, , p]) => !p || p()).map(([k, t]) =>
       h('a', { href: `#/os/${id}/${k}`, class: k === aba ? 'ativa' : '' }, t))),
@@ -348,7 +348,10 @@ async function abaTarefas(el, ctx) {
     ], linhas, { aoClicar: (t) => abrirTarefa(t.id, recarregar), vazio: 'Nenhuma tarefa para esta OS.' })));
 }
 
-// ------------------------------------------------------------------ Processos / Documentos
+// ------------------------------------------------------------------ Documentos | Processos
+const TIPOS_DOC = ['Docs. Contratuais', 'Documento', 'Processo', 'ART'];
+const SITUACOES_DOC = ['Em andamento', 'Encerrado', 'Pendente', 'Ativa', 'Baixada', 'Emitida'];
+const ORIGENS = ['Cliente', 'CETESB', 'CREA-SP', 'CONDEPHAAT', 'Prefeitura Municipal de Guarujá', 'Prefeitura Municipal de Santos', 'DVTR-3', 'Ministério Público'];
 const PERIODICIDADES = ['Semanal', 'Quinzenal', 'Mensal', 'Bimestral', 'Semestral', 'Nenhuma'];
 
 // mesma regra da função calcula_proxima_verificacao do banco (só para mostrar enquanto edita)
@@ -364,13 +367,6 @@ function proximaVerificacao(verificado, periodicidade) {
   return dt ? dt.toLocaleDateString('sv-SE') : null;
 }
 
-// vermelho se já passou, amarelo se faltam até 10 dias
-function dataVerificacao(data) {
-  if (!data) return '';
-  const dias = Math.round((new Date(data + 'T00:00') - new Date(new Date().toDateString())) / 864e5);
-  return h('span', { class: dias < 0 ? 'txt-vermelho' : dias <= 10 ? 'txt-amarelo' : '' }, fmtData(data));
-}
-
 async function abaProcessos(el, ctx) {
   const { os, podeEditar } = ctx;
   const linhas = await q(sb.from('processo').select('*, processo_acesso(*)').eq('os_id', os.id).order('data_abertura', { nullsFirst: false }));
@@ -380,10 +376,10 @@ async function abaProcessos(el, ctx) {
     const a = p?.processo_acesso || {};
     let fechar;
     const form = formulario([
-      { k: 'natureza', rotulo: 'Tipo', tipo: 'opcoes', opcoes: ['Processo', 'Documento', 'ART'], obrig: true, numerico: false, padrao: 'Processo' },
+      { k: 'natureza', rotulo: 'Tipo', tipo: 'opcoes', opcoes: TIPOS_DOC, obrig: true, numerico: false, padrao: 'Documento' },
       { k: 'art_baixada', rotulo: 'ART baixada', tipo: 'marcar', padrao: false,
         ajuda: 'Enquanto não for marcada, a OS fica com pendência quando o serviço terminar (técnico e comercial).' },
-      { k: 'instituicao', rotulo: 'Órgão / instituição', obrig: true, sugestoes: ['CETESB', 'CREA-SP', 'CONDEPHAAT', 'Prefeitura Municipal de Guarujá', 'Prefeitura Municipal de Santos', 'DVTR-3', 'Ministério Público'] },
+      { k: 'instituicao', rotulo: 'Origem', obrig: true, sugestoes: ORIGENS, ajuda: 'Escolha na lista (ex.: Cliente, CETESB) ou digite outra.' },
       { k: 'referencia', rotulo: 'Número', ajuda: 'Nº do processo, do documento, da licença, do ofício...' },
       { k: 'data_abertura', rotulo: 'Data (abertura ou emissão)', tipo: 'data' },
       { k: 'objetivo', rotulo: 'Assunto / objetivo', largura: 2 },
@@ -391,7 +387,8 @@ async function abaProcessos(el, ctx) {
       { k: 'verificado_em', rotulo: 'Verificado em', tipo: 'data', ajuda: 'Última vez que a situação foi conferida.' },
       { k: 'periodicidade', rotulo: 'Verificar com que regularidade?', tipo: 'opcoes', opcoes: PERIODICIDADES, obrig: true, numerico: false, padrao: 'Nenhuma' },
       { k: 'proxima_verificacao', rotulo: 'Próxima verificação', tipo: 'data', desativado: true, ajuda: 'Calculada automaticamente: "Verificado em" + regularidade.' },
-      { k: 'situacao', rotulo: 'Situação', tipo: 'area', linhas: 3, ajuda: 'Descreva a situação atual. Aparece no link do cliente, junto com "Verificado em".' },
+      { k: 'status', rotulo: 'Situação', tipo: 'opcoes', opcoes: SITUACOES_DOC, numerico: false },
+      { k: 'situacao', rotulo: 'Detalhamento da situação', tipo: 'area', linhas: 3, largura: 2, ajuda: 'Descreva a situação atual. Aparece no link do cliente, junto com "Situação" e "Verificado em".' },
       { k: 'observacao', rotulo: 'Observação interna', tipo: 'area', linhas: 2 },
       { tipo: 'info', rotulo: 'Acesso ao portal (só a equipe vê; nunca aparece no link do cliente)' },
       { k: 'plataforma', rotulo: 'Plataforma / site', largura: 2 },
@@ -415,14 +412,16 @@ async function abaProcessos(el, ctx) {
     });
     // ao mudar a situação, sugere a data de hoje em "Verificado em"
     const atualizarProxima = () => { form.ctrls.proxima_verificacao.value = proximaVerificacao(form.ctrls.verificado_em.value, form.ctrls.periodicidade.value) || ''; };
-    form.ctrls.situacao.addEventListener('change', () => { form.ctrls.verificado_em.value = new Date().toLocaleDateString('sv-SE'); atualizarProxima(); });
+    const hoje = () => { form.ctrls.verificado_em.value = new Date().toLocaleDateString('sv-SE'); atualizarProxima(); };
+    form.ctrls.situacao.addEventListener('change', hoje);
+    form.ctrls.status.addEventListener('change', hoje);
     form.ctrls.verificado_em.addEventListener('change', atualizarProxima);
     form.ctrls.periodicidade.addEventListener('change', atualizarProxima);
     // "ART baixada" só aparece quando o tipo é ART
     const campoArt = form.ctrls.art_baixada.closest('.campo');
     const mostrarArt = () => { campoArt.hidden = form.ctrls.natureza.value !== 'ART'; };
     form.ctrls.natureza.addEventListener('change', mostrarArt); mostrarArt();
-    fechar = abrirJanela(p ? 'Alterar processo/documento' : 'Incluir processo/documento', form, { largo: true });
+    fechar = abrirJanela(p ? 'Alterar documento/processo' : 'Incluir documento/processo', form, { largo: true });
   }
 
   const senhaOculta = (s) => {
@@ -439,28 +438,28 @@ async function abaProcessos(el, ctx) {
     const a = p.processo_acesso || {};
     const item = (r, v) => v ? [h('dt', {}, r), h('dd', {}, v)] : null;
     abrirJanela(`${p.natureza || 'Processo'} ${p.referencia || ''}`, h('dl', { class: 'detalhes' },
-      item('Órgão', p.instituicao), item('Número', p.referencia), item('Data', fmtData(p.data_abertura)), item('Assunto', p.objetivo),
+      item('Origem', p.instituicao), item('Número', p.referencia), item('Data', fmtData(p.data_abertura)), item('Assunto', p.objetivo),
       item('ART baixada', p.natureza === 'ART' ? (p.art_baixada ? 'Sim' : 'Não') : null),
       item('Meio', p.tipo), item('Verificado em', fmtData(p.verificado_em)), item('Regularidade', p.periodicidade !== 'Nenhuma' ? p.periodicidade : null),
-      item('Próxima verificação', fmtData(p.proxima_verificacao)), item('Situação', p.situacao ? h('span', { class: 'pre' }, p.situacao) : null),
+      item('Próxima verificação', fmtData(p.proxima_verificacao)), item('Situação', p.status), item('Detalhamento da situação', p.situacao ? h('span', { class: 'pre' }, p.situacao) : null),
       item('Observação interna', p.observacao), item('Portal', link(a.plataforma)), item('Login', a.login), item('Senha', senhaOculta(a.senha))), { largo: true });
   }
 
-  limpar(el, secao('Processos e documentos',
-    podeEditar ? botao('Incluir processo/documento', () => editar(null), 'primario') : null,
-    h('p', { class: 'ajuda' }, 'Clique numa linha para ver tudo, inclusive regularidade da verificação e o acesso ao portal (login e senha). "Verificado em" e "Situação" aparecem no link do cliente; login e senha nunca aparecem.'),
+  limpar(el, secao('Documentos e processos',
+    podeEditar ? botao('Incluir documento/processo', () => editar(null), 'primario') : null,
+    h('p', { class: 'ajuda' }, 'Clique numa linha para ver tudo, inclusive próxima verificação e o acesso ao portal (login e senha). "Verificado em", "Situação" e "Detalhamento" aparecem no link do cliente; login e senha nunca aparecem.'),
     tabela([
       { rotulo: 'Tipo', k: 'natureza', f: (p) => p.natureza === 'ART'
         ? h('span', { class: 'nowrap' }, etiqueta('ART'), ' ', h('small', { class: p.art_baixada ? 'txt-cinza' : 'txt-vermelho' }, p.art_baixada ? 'baixada' : 'não baixada'))
         : etiqueta(p.natureza) },
-      { rotulo: 'Órgão', k: 'instituicao' },
+      { rotulo: 'Origem', k: 'instituicao' },
       { rotulo: 'Número', k: 'referencia' },
       { rotulo: 'Data', f: (p) => fmtData(p.data_abertura), ord: (p) => p.data_abertura },
       { rotulo: 'Assunto', k: 'objetivo', classe: 'texto' },
       { rotulo: 'Verificado em', f: (p) => fmtData(p.verificado_em), ord: (p) => p.verificado_em },
-      { rotulo: 'Próxima verificação', ord: (p) => p.proxima_verificacao, f: (p) => dataVerificacao(p.proxima_verificacao) },
-      { rotulo: 'Situação', k: 'situacao', classe: 'texto', f: (p) => h('span', { class: 'pre' }, p.situacao || '') },
-    ], linhas, { aoClicar: podeEditar ? editar : ver, vazio: 'Nenhum processo ou documento cadastrado.' })));
+      { rotulo: 'Situação', k: 'status', f: (p) => etiqueta(p.status) },
+      { rotulo: 'Detalhamento da situação', k: 'situacao', classe: 'texto', f: (p) => h('span', { class: 'pre' }, p.situacao || '') },
+    ], linhas, { aoClicar: podeEditar ? editar : ver, vazio: 'Nenhum documento ou processo cadastrado.' })));
 }
 
 // ------------------------------------------------------------------ Produtos técnicos (cadastro com link do Dropbox)
@@ -536,7 +535,7 @@ async function abaLink(el, ctx) {
       await q(sb.from('link_cliente').insert({ os_id: os.id }));
       aviso('Link gerado. Copie e envie ao cliente.'); recarregar();
     }, 'primario'),
-    h('p', { class: 'ajuda' }, 'O cliente abre o link sem login e vê: dados da OS, escopo, cronograma, prazos, parcelas, processos/documentos (com "Verificado em" e "Situação"), produtos técnicos e os andamentos marcados como "Geral". Andamentos internos e senhas nunca aparecem. Você pode cancelar o link a qualquer momento.'),
+    h('p', { class: 'ajuda' }, 'O cliente abre o link sem login e vê: dados da OS, escopo, cronograma, prazos, parcelas, documentos e processos (com "Verificado em", "Situação" e "Detalhamento"), produtos técnicos e os andamentos marcados como "Geral". Andamentos internos e senhas nunca aparecem. Você pode cancelar o link a qualquer momento.'),
     tabela([
       { rotulo: 'Link', f: (l) => l.revogado_em ? h('span', { class: 'riscado' }, 'cancelado') : h('span', { class: 'link-cliente' },
         h('a', { href: url(l), target: '_blank', rel: 'noopener' }, 'abrir'),
