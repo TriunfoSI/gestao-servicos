@@ -10,23 +10,23 @@
   <script type="importmap">
   {
     "imports": {
-      "./config.js": "./config.js?v=202611251439",
-      "./js/app.js": "./js/app.js?v=202611251439",
-      "./js/base.js": "./js/base.js?v=202611251439",
-      "./js/paginas/busca.js": "./js/paginas/busca.js?v=202611251439",
-      "./js/paginas/cadastros.js": "./js/paginas/cadastros.js?v=202611251439",
-      "./js/paginas/clientes.js": "./js/paginas/clientes.js?v=202611251439",
-      "./js/paginas/cronograma.js": "./js/paginas/cronograma.js?v=202611251439",
-      "./js/paginas/financeiro.js": "./js/paginas/financeiro.js?v=202611251439",
-      "./js/paginas/fornecedores.js": "./js/paginas/fornecedores.js?v=202611251439",
-      "./js/paginas/os.js": "./js/paginas/os.js?v=202611251439",
-      "./js/paginas/painel.js": "./js/paginas/painel.js?v=202611251439",
-      "./js/paginas/prazos.js": "./js/paginas/prazos.js?v=202611251439",
-      "./js/paginas/tarefas.js": "./js/paginas/tarefas.js?v=202611251439"
+      "./config.js": "./config.js?v=202611261353",
+      "./js/app.js": "./js/app.js?v=202611261353",
+      "./js/base.js": "./js/base.js?v=202611261353",
+      "./js/paginas/busca.js": "./js/paginas/busca.js?v=202611261353",
+      "./js/paginas/cadastros.js": "./js/paginas/cadastros.js?v=202611261353",
+      "./js/paginas/clientes.js": "./js/paginas/clientes.js?v=202611261353",
+      "./js/paginas/cronograma.js": "./js/paginas/cronograma.js?v=202611261353",
+      "./js/paginas/financeiro.js": "./js/paginas/financeiro.js?v=202611261353",
+      "./js/paginas/fornecedores.js": "./js/paginas/fornecedores.js?v=202611261353",
+      "./js/paginas/os.js": "./js/paginas/os.js?v=202611261353",
+      "./js/paginas/painel.js": "./js/paginas/painel.js?v=202611261353",
+      "./js/paginas/prazos.js": "./js/paginas/prazos.js?v=202611261353",
+      "./js/paginas/tarefas.js": "./js/paginas/tarefas.js?v=202611261353"
     }
   }
   </script>
-  <link rel="stylesheet" href="css/estilo.css?v=202611251439">
+  <link rel="stylesheet" href="css/estilo.css?v=202611261353">
   <style>
     .rel { max-width: 960px; margin: 0 auto; padding: 1.25rem; }
     .rel-topo { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; border-bottom: 3px solid var(--marca); padding-bottom: .75rem; margin-bottom: 1rem; }
@@ -53,7 +53,7 @@
     }
     const data = (d) => d ? new Date(d.length === 10 ? d + 'T12:00:00' : d).toLocaleDateString('pt-BR') : '';
     const reais = (v) => v == null ? '' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const COR = { 'Em andamento': 'azul', 'Ativo': 'azul', 'Em aberto': 'amarelo', 'Paralisado': 'laranja', 'Finalizado': 'verde', 'Encerrado': 'verde',
+    const COR = { 'Pendente': 'amarelo', 'Ativa': 'verde', 'Emitida': 'verde', 'Baixada': 'cinza', 'Em andamento': 'azul', 'Ativo': 'azul', 'Em aberto': 'amarelo', 'Paralisado': 'laranja', 'Finalizado': 'verde', 'Encerrado': 'verde',
       'Concluído': 'verde', 'Pago': 'verde', 'Não iniciado': 'cinza', 'Cancelado': 'cinza', 'Nota fiscal emitida': 'roxo', 'Pendência': 'laranja', 'Não atendido': 'cinza', 'Concluída': 'verde', 'Não iniciada': 'cinza', 'A vencer': 'amarelo', 'Vencido': 'vermelho', 'Atendido': 'verde', 'Atendido fora do prazo': 'laranja', 'Triunfo': 'azul', 'Cliente': 'laranja' };
     const etq = (t) => t ? h('span', { class: 'etq ' + (COR[t] || 'cinza') }, t) : '';
     const tabela = (cols, linhas, vazio) => !linhas.length ? h('p', { class: 'vazio' }, vazio) :
@@ -91,8 +91,8 @@
         (r.prazos || []).length ? secao('Prazos', tabela([['Data', (p) => data(p.data)], ['Descrição', (p) => p.descricao, 'texto'], ['Tipo', (p) => p.tipo || ''], ['Origem', (p) => p.origem || ''], ['Situação', (p) => etq(p.situacao)], ['Atendido em', (p) => data(p.atendimento)]], r.prazos, '')) : null,
         secao('Andamento', r.andamento.length ? h('ul', { class: 'linha-tempo' }, r.andamento.map((m) => h('li', {}, h('div', { class: 'lt-data' }, data(m.data)),
           h('div', { class: 'lt-corpo' }, m.detalhe ? h('strong', {}, m.detalhe) : null, h('p', { class: 'pre' }, m.descricao))))) : h('p', { class: 'vazio' }, 'Nenhum registro de andamento divulgado ainda.')),
-        secao('Processos e documentos', tabela([['Tipo', (p) => p.natureza || ''], ['Órgão', (p) => p.instituicao || ''], ['Número', (p) => p.referencia || ''], ['Data', (p) => data(p.abertura)], ['Assunto', (p) => p.objetivo || '', 'texto'],
-          ['Verificado em', (p) => data(p.verificado_em)], ['Situação', (p) => h('span', { class: 'pre' }, p.situacao || ''), 'texto']], r.processos, 'Nenhum processo ou documento vinculado.')),
+        secao('Documentos e processos', tabela([['Tipo', (p) => p.natureza || ''], ['Origem', (p) => p.instituicao || ''], ['Número', (p) => p.referencia || ''], ['Data', (p) => data(p.abertura)], ['Assunto', (p) => p.objetivo || '', 'texto'],
+          ['Verificado em', (p) => data(p.verificado_em)], ['Situação', (p) => etq(p.status)], ['Detalhamento da situação', (p) => h('span', { class: 'pre' }, p.situacao || ''), 'texto']], r.processos, 'Nenhum documento ou processo vinculado.')),
         secao('Financeiro',
           r.financeiro.length ? h('p', {}, `Total: ${reais(totais.t)} · Pago: ${reais(totais.p)} · A pagar: ${reais(totais.t - totais.p)}`) : null,
           tabela([['Parcela', (p) => p.parcela || ''], ['Referência', (p) => p.referencia || '', 'texto'], ['Valor', (p) => reais(p.valor), 'num'], ['Previsão', (p) => data(p.prevista)], ['Pagamento', (p) => data(p.paga)], ['Situação', (p) => etq(p.situacao)]], r.financeiro, 'Nenhuma parcela cadastrada.')),
