@@ -1,5 +1,5 @@
 import { sb, st, h, limpar, q, aviso, tabela, etiqueta, fmtData, fmtReais, editarRegistro, opcoesLista, cartao, botao,
-  secao, abrirJanela, formulario, hoje } from '../base.js';
+  secao, abrirJanela, formulario, hoje, chaveOS } from '../base.js';
 
 export const SIT_PARCELA = ['Em aberto', 'Nota fiscal emitida', 'Pendência', 'Pago', 'Cancelada'];
 const BANCOS = ['Santander', 'Bradesco', 'Itaú', 'Banco do Brasil', 'Caixa', 'Inter', 'Nubank'];
@@ -215,7 +215,7 @@ export async function paginaFinanceiro(el) {
       h('div', { class: 'cartoes' }, cartao(pagas ? 'Recebido' : 'Total', fmtReais(total), `${ls.length} parcelas`, pagas ? 'verde' : 'amarelo'),
         Object.entries(porMes).sort().slice(0, 6).map(([k, v]) => cartao(/^\d{4}-\d{2}$/.test(k) ? new Date(k + '-15').toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }) : k, fmtReais(v), pagas ? 'recebido' : 'previsto'))),
       tabela([
-        { rotulo: 'OS', ord: (p) => p.os_numero, f: (p) => h('a', { href: `#/os/${p.os_id}/financeiro`, onclick: (e) => e.stopPropagation() }, p.os_numero || '#' + p.os_id) },
+        { rotulo: 'OS', ord: (p) => chaveOS(p.os_numero), f: (p) => h('a', { href: `#/os/${p.os_id}/financeiro`, onclick: (e) => e.stopPropagation() }, p.os_numero || '#' + p.os_id) },
         { rotulo: 'Cliente', k: 'cliente_curto' },
         { rotulo: 'Parcela', f: (p) => p.numero ? `${p.numero}/${p.total_parcelas || '?'}` : '' },
         { rotulo: 'Referência', k: 'referencia', classe: 'texto' },

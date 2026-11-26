@@ -1,5 +1,5 @@
 import { sb, st, h, limpar, q, aviso, tabela, etiqueta, fmtData, fmtReais, formulario, abrirJanela, confirmar,
-  opcoesLista, botao, secao, cartao, eFinanceiro, carregarListas } from '../base.js';
+  opcoesLista, botao, secao, cartao, eFinanceiro, carregarListas, chaveOS } from '../base.js';
 
 const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
 
@@ -123,7 +123,7 @@ export async function paginaFornecedor(el, id) {
       h('div', { class: 'cartoes' }, cartao('OS', qtdOS), cartao('Total contratado', fmtReais(total)), cartao('Pago', fmtReais(pago), null, 'verde'),
         cartao('A pagar', fmtReais(total - pago), null, total - pago ? 'amarelo' : '')),
       tabela([
-        { rotulo: 'OS', ord: (c) => c.os_numero, f: (c) => h('a', { href: `#/os/${c.os_id}/financeiro`, onclick: (e) => e.stopPropagation() }, c.os_numero || '#' + c.os_id) },
+        { rotulo: 'OS', ord: (c) => chaveOS(c.os_numero), f: (c) => h('a', { href: `#/os/${c.os_id}/financeiro`, onclick: (e) => e.stopPropagation() }, c.os_numero || '#' + c.os_id) },
         { rotulo: 'Cliente', k: 'cliente_curto' },
         { rotulo: 'Título da OS', k: 'os_titulo', classe: 'texto' },
         { rotulo: 'Serviço executado', f: (c) => c.tipo_servico || c.tipo, ord: (c) => c.tipo_servico || c.tipo },

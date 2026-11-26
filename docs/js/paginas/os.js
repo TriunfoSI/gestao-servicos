@@ -2,6 +2,7 @@ import {
   sb, st, h, limpar, q, aviso, tabela, etiqueta, fmtData, fmtDataHora, fmtReais, botao, secao, cartao,
   abrirJanela, formulario, editarRegistro, confirmar, opcoesEquipe, opcoesCliente, opcoesLista, nomeEquipe,
   eGestor, eFinanceiro, perfil,
+  chaveOS,
 } from '../base.js';
 import { editarPrazo, colunasPrazo, ordenarPrazos, podeAbrirPrazo } from './prazos.js';
 import { editarAtividade, colunasCronograma, editarCronogramaEmTabela, atividadesDaOS } from './cronograma.js';
@@ -40,7 +41,7 @@ export async function paginaListaOS(el) {
       (!subcat.value || String(o.subcategoria_id) === subcat.value) &&
       (!b || [o.numero, o.titulo, o.cliente_curto, o.cliente_nome, o.local, o.municipio, o.categoria, o.subcategoria].some((x) => x && x.toLowerCase().includes(b))));
     limpar(area, h('p', { class: 'contagem' }, `${linhas.length} OS`), tabela([
-      { rotulo: 'Nº', k: 'numero' },
+      { rotulo: 'Nº', k: 'numero', ord: (o) => chaveOS(o.numero) },
       { rotulo: 'Cliente', k: 'cliente_curto' },
       { rotulo: 'Título', k: 'titulo', f: (o) => [o.titulo, o.revisar_migracao ? h('span', { class: 'etq roxo', title: o.revisar_migracao }, 'revisar') : null], classe: 'texto' },
       { rotulo: 'Categoria', ord: (o) => [o.categoria, o.subcategoria].join(' '), f: (o) => o.categoria ? [o.categoria, o.subcategoria ? h('small', { class: 'bloco' }, o.subcategoria) : null] : '' },
