@@ -7,7 +7,27 @@
   <title>Solicitação de proposta | Triunfo Engenharia Ambiental</title>
   <link rel="icon" type="image/png" href="img/favicon.png">
   <link rel="apple-touch-icon" href="img/icone-180.png">
-  <link rel="stylesheet" href="css/estilo.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "./config.js": "./config.js?v=202611270041",
+      "./js/app.js": "./js/app.js?v=202611270041",
+      "./js/base.js": "./js/base.js?v=202611270041",
+      "./js/paginas/busca.js": "./js/paginas/busca.js?v=202611270041",
+      "./js/paginas/cadastros.js": "./js/paginas/cadastros.js?v=202611270041",
+      "./js/paginas/clientes.js": "./js/paginas/clientes.js?v=202611270041",
+      "./js/paginas/cronograma.js": "./js/paginas/cronograma.js?v=202611270041",
+      "./js/paginas/financeiro.js": "./js/paginas/financeiro.js?v=202611270041",
+      "./js/paginas/fornecedores.js": "./js/paginas/fornecedores.js?v=202611270041",
+      "./js/paginas/os.js": "./js/paginas/os.js?v=202611270041",
+      "./js/paginas/painel.js": "./js/paginas/painel.js?v=202611270041",
+      "./js/paginas/prazos.js": "./js/paginas/prazos.js?v=202611270041",
+      "./js/paginas/propostas.js": "./js/paginas/propostas.js?v=202611270041",
+      "./js/paginas/tarefas.js": "./js/paginas/tarefas.js?v=202611270041"
+    }
+  }
+  </script>
+  <link rel="stylesheet" href="css/estilo.css?v=202611270041">
   <style>
     body { background: var(--fundo); }
     .faixa { background: var(--marca); height: 6px; }
@@ -37,6 +57,12 @@
     .soltar strong { color: var(--marca); }
     .soltar p { margin: .3rem 0 0; color: var(--suave); font-size: .85rem; }
     .soltar input { display: none; }
+    .grupo-arq { margin-top: 1.1rem; }
+    .grupo-arq h3 { font-size: .92rem; margin: 0 0 .15rem; }
+    .grupo-arq h3 small { font-weight: 400; color: var(--suave); }
+    .grupo-arq .ajuda { margin: 0 0 .5rem; }
+    .soltar { padding: 1rem; }
+    .progresso { font-size: .88rem; color: var(--suave); margin: .5rem 0; text-align: right; }
     .lista-arq { list-style: none; padding: 0; margin: .75rem 0 0; }
     .lista-arq li { display: flex; justify-content: space-between; align-items: center; gap: .5rem; padding: .45rem .7rem; border: 1px solid var(--linha); border-radius: 8px; margin-bottom: .35rem; font-size: .9rem; }
     .lista-arq li small { color: var(--suave); white-space: nowrap; }
@@ -66,64 +92,57 @@
     <div id="conteudo">
       <section class="sp-intro">
         <h1>Conte-nos sobre o seu projeto</h1>
-        <p>Preencha as informações abaixo para que nossa equipe técnica avalie a sua necessidade e prepare uma proposta. Os campos marcados com <span style="color:var(--vermelho)">*</span> são obrigatórios. Leva cerca de 5 minutos.</p>
-        <ol class="passos"><li><b>1</b>Seus dados</li><li><b>2</b>Local</li><li><b>3</b>Serviço</li><li><b>4</b>Arquivos</li></ol>
+        <p>Preencha as informações abaixo para que nossa equipe técnica avalie a sua necessidade e prepare uma proposta. Os campos marcados com <span style="color:var(--vermelho)">*</span> são obrigatórios. Leva poucos minutos.</p>
+        <ol class="passos"><li><b>1</b>Contratante</li><li><b>2</b>Local</li><li><b>3</b>Serviço</li><li><b>4</b>Documentos</li></ol>
       </section>
 
       <form id="form" novalidate>
         <input class="isca" type="text" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
 
         <section class="bloco-form">
-          <h2><span class="num">1</span>Seus dados</h2>
+          <h2><span class="num">1</span>Dados do contratante</h2>
           <div class="grade-form">
-            <label class="campo"><span>Nome completo<b class="obr">*</b></span><input name="nome" required maxlength="150" autocomplete="name"></label>
-            <label class="campo"><span>Empresa ou instituição</span><input name="empresa" maxlength="200" autocomplete="organization"><small>Deixe em branco se for pessoa física.</small></label>
-            <label class="campo"><span>CPF ou CNPJ</span><input name="cpf_cnpj" maxlength="20" inputmode="numeric"></label>
-            <label class="campo"><span>Cargo ou função</span><input name="cargo" maxlength="100"></label>
-            <label class="campo"><span>E-mail<b class="obr">*</b></span><input name="email" type="email" required maxlength="150" autocomplete="email"></label>
-            <label class="campo"><span>Telefone / WhatsApp<b class="obr">*</b></span><input name="telefone" type="tel" required maxlength="30" autocomplete="tel" placeholder="(13) 99999-9999"></label>
+            <label class="campo largo"><span>Nome / Razão social<b class="obr">*</b></span><input name="contratante_nome" required maxlength="200" autocomplete="organization"></label>
+            <label class="campo largo"><span>Endereço<b class="obr">*</b></span><input name="contratante_endereco" required maxlength="300" autocomplete="street-address"></label>
+            <label class="campo"><span>CPF / CNPJ<b class="obr">*</b></span><input name="contratante_cpf_cnpj" required maxlength="20" inputmode="numeric"></label>
+            <label class="campo"><span>E-mail<b class="obr">*</b></span><input name="contratante_email" type="email" required maxlength="150" autocomplete="email"></label>
+            <label class="campo"><span>Telefone / Celular<b class="obr">*</b></span><input name="contratante_telefone" type="tel" required maxlength="30" autocomplete="tel" placeholder="(13) 99999-9999"></label>
           </div>
         </section>
 
         <section class="bloco-form">
-          <h2><span class="num">2</span>Local do empreendimento</h2>
+          <h2><span class="num">2</span>Dados do local do serviço</h2>
           <div class="grade-form">
-            <label class="campo largo"><span>Nome do empreendimento ou imóvel</span><input name="empreendimento" maxlength="200" placeholder="Ex.: Condomínio Residencial Vista Mar"></label>
-            <label class="campo largo"><span>Endereço</span><input name="endereco" maxlength="250"></label>
-            <label class="campo"><span>Município<b class="obr">*</b></span><input name="municipio" required maxlength="100"></label>
-            <label class="campo"><span>UF</span><select name="uf"><option></option></select></label>
-            <label class="campo"><span>Área aproximada</span><input name="area" maxlength="50" placeholder="Ex.: 2.500 m²"></label>
-            <label class="campo"><span>Matrícula ou inscrição imobiliária</span><input name="matricula" maxlength="100"></label>
+            <label class="campo largo"><span>Denominação<b class="obr">*</b></span><input name="local_denominacao" required maxlength="200" placeholder="Nome do empreendimento, imóvel ou área"></label>
+            <label class="campo largo"><span>Endereço completo<b class="obr">*</b></span><input name="local_endereco" required maxlength="300" placeholder="Rua, número, bairro, município / UF"></label>
+            <label class="campo largo"><span>Link da localização no Google Maps</span><input name="local_link_mapa" type="url" maxlength="500" placeholder="https://maps.app.goo.gl/..."><small>No Google Maps, marque o local, toque em "Compartilhar" e cole o link aqui.</small></label>
           </div>
         </section>
 
         <section class="bloco-form">
-          <h2><span class="num">3</span>Serviço desejado</h2>
-          <div class="campo largo" style="margin-bottom:.9rem"><span>Qual tipo de serviço você precisa?<b class="obr">*</b></span>
-            <div class="opcoes" id="tipos"></div>
-          </div>
+          <h2><span class="num">3</span>Serviço a ser executado</h2>
           <div class="grade-form">
-            <label class="campo largo"><span>Descreva sua necessidade<b class="obr">*</b></span><textarea name="descricao" rows="5" required maxlength="5000" placeholder="O que você pretende fazer no local, o que motivou a procura (exigência de órgão, compra do imóvel, notificação...) e outras informações que julgar importantes."></textarea></label>
-            <div class="campo"><span>Já existe processo ou notificação em algum órgão?</span>
-              <div class="linha-radio"><label><input type="radio" name="tem_processo" value="Sim"> Sim</label><label><input type="radio" name="tem_processo" value="Não"> Não</label><label><input type="radio" name="tem_processo" value="Não sei"> Não sei</label></div></div>
-            <label class="campo" id="campo-processo" hidden><span>Órgão e número do processo</span><input name="processo" maxlength="200" placeholder="Ex.: CETESB, processo 12345/2026"></label>
-            <label class="campo"><span>Existe um prazo para o serviço?</span><input name="prazo_desejado" type="date"><small>Informe se houver data limite (exigência de órgão, obra, venda...).</small></label>
-            <label class="campo"><span>Como conheceu a Triunfo?</span><select name="origem"><option></option><option>Indicação</option><option>Já sou cliente</option><option>Internet / redes sociais</option><option>Evento</option><option>Outro</option></select></label>
+            <label class="campo largo"><span>Descreva brevemente a sua solicitação<b class="obr">*</b></span><textarea name="descricao" rows="5" required maxlength="5000" placeholder="O que precisa ser feito e o que motivou a procura (exigência de órgão, auto de infração, edital, licença, obra, venda do imóvel...)."></textarea></label>
+          </div>
+          <div class="grupo-arq" data-grupo="demanda">
+            <h3>Documentação que gerou a demanda <small>(se houver)</small></h3>
+            <p class="ajuda">Ofício, Auto de Infração, Edital, licença, comunique-se ou outros.</p>
           </div>
         </section>
 
         <section class="bloco-form">
-          <h2><span class="num">4</span>Arquivos <small style="font-weight:400;color:var(--suave);font-size:.85rem">(opcional)</small></h2>
-          <p class="ajuda" style="margin-top:-.4rem">Envie o que tiver: matrícula, planta, fotos, notificações, licenças anteriores, mapas (KML/KMZ)…</p>
-          <label class="soltar" id="soltar">
-            <input type="file" id="arquivos" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.dwg,.kml,.kmz,.zip">
-            <strong>Clique para escolher</strong> ou arraste os arquivos aqui
-            <p>Até 10 arquivos, de até 20 MB cada. PDF, imagens, Word, Excel, DWG, KML/KMZ ou ZIP.</p>
-          </label>
-          <ul class="lista-arq" id="lista-arq"></ul>
+          <h2><span class="num">4</span>Documentos da área <small style="font-weight:400;color:var(--suave);font-size:.85rem">(envie o que tiver disponível)</small></h2>
+          <div class="grupo-arq" data-grupo="delimitacao">
+            <h3>Delimitação da área</h3>
+            <p class="ajuda">Arquivo KMZ/KML, mapa ou DWG.</p>
+          </div>
+          <div class="grupo-arq" data-grupo="area">
+            <h3>Matrícula ou outro documento da área</h3>
+          </div>
+          <p class="ajuda" style="margin-bottom:0">Até 20 MB por arquivo. Formatos aceitos: PDF, imagens, Word, Excel, DWG/DXF, KML/KMZ, ZIP/RAR.</p>
         </section>
 
-        <label class="aceite"><input type="checkbox" name="aceite" required> <span>Autorizo a Triunfo Engenharia Ambiental a usar estas informações apenas para avaliar a minha solicitação e entrar em contato comigo, conforme a Lei Geral de Proteção de Dados (LGPD).</span></label>
+        <label class="aceite"><input type="checkbox" name="aceite_lgpd" required> <span>Autorizo a Triunfo Engenharia Ambiental a usar estas informações apenas para avaliar a minha solicitação e entrar em contato comigo, conforme a Lei Geral de Proteção de Dados (LGPD).<b class="obr" style="color:var(--vermelho)">*</b></span></label>
         <div id="msg"></div>
         <div class="enviar"><button class="btn primario" type="submit" id="btn-enviar">Enviar solicitação</button></div>
       </form>
@@ -132,54 +151,102 @@
     <footer class="sp-rodape">Triunfo Engenharia Ambiental · Seus dados são tratados com sigilo.</footer>
   </main>
 
-  <script>
-    // Prévia visual: o envio ainda não grava no banco.
-    const TIPOS = ['Licenciamento ambiental', 'Autorização de supressão de vegetação', 'Laudo ou relatório técnico', 'Regularização ou defesa de auto de infração', 'Outorga de uso de água', 'Outro / não sei informar'];
-    const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
-    const EXT = ['pdf','jpg','jpeg','png','doc','docx','xls','xlsx','dwg','kml','kmz','zip'];
-    const MAX_ARQ = 10, MAX_MB = 20;
+  <script src="vendor/supabase-2.118.0.js"></script>
+  <script type="module">
+    import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+    const BALDE = 'solicitacoes-proposta';
+    const EXT = ['pdf','jpg','jpeg','png','doc','docx','xls','xlsx','dwg','dxf','kml','kmz','zip','rar'];
+    const MAX_MB = 20, MAX_TOTAL = 30;
     const form = document.getElementById('form');
-    document.getElementById('tipos').innerHTML = TIPOS.map((t) => `<label><input type="checkbox" name="tipos" value="${t}"> ${t}</label>`).join('');
-    const uf = form.uf; UFS.forEach((u) => uf.add(new Option(u, u, false, u === 'SP')));
-    form.querySelectorAll('[name=tem_processo]').forEach((r) => r.addEventListener('change', () => { document.getElementById('campo-processo').hidden = form.tem_processo.value !== 'Sim'; }));
-
-    let arquivos = [];
-    const lista = document.getElementById('lista-arq'), soltar = document.getElementById('soltar');
+    const msg = document.getElementById('msg');
+    const btn = document.getElementById('btn-enviar');
+    const arquivos = [];   // { f, grupo, erro }
     const tam = (b) => b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.ceil(b / 1024) + ' KB';
-    function adicionar(fs) {
-      for (const f of fs) {
-        const ext = f.name.split('.').pop().toLowerCase();
-        const erro = !EXT.includes(ext) ? 'tipo de arquivo não aceito' : f.size > MAX_MB * 1048576 ? `maior que ${MAX_MB} MB` : arquivos.length >= MAX_ARQ ? `limite de ${MAX_ARQ} arquivos` : null;
-        arquivos.push({ f, erro });
-      }
-      desenhar();
-    }
-    function desenhar() {
-      lista.replaceChildren(...arquivos.map((a, i) => {
+
+    // cria uma área "clique ou arraste" para cada grupo de documentos
+    document.querySelectorAll('.grupo-arq').forEach((g) => {
+      const grupo = g.dataset.grupo;
+      const zona = document.createElement('label');
+      zona.className = 'soltar';
+      zona.innerHTML = '<input type="file" multiple accept="' + EXT.map((e) => '.' + e).join(',') + '"><strong>Clique para escolher</strong> ou arraste os arquivos aqui';
+      const lista = document.createElement('ul'); lista.className = 'lista-arq';
+      g.append(zona, lista);
+      const entrada = zona.querySelector('input');
+      const adicionar = (fs) => {
+        for (const f of fs) {
+          const ext = f.name.split('.').pop().toLowerCase();
+          const erro = !EXT.includes(ext) ? 'formato não aceito' : f.size > MAX_MB * 1048576 ? `maior que ${MAX_MB} MB`
+            : arquivos.filter((a) => !a.erro).length >= MAX_TOTAL ? `limite de ${MAX_TOTAL} arquivos` : null;
+          arquivos.push({ f, grupo, erro });
+        }
+        desenhar();
+      };
+      const desenhar = () => lista.replaceChildren(...arquivos.filter((a) => a.grupo === grupo).map((a) => {
         const li = document.createElement('li'); if (a.erro) li.className = 'erro';
-        li.innerHTML = `<span></span><span><small></small> <button type="button" class="btn-link perigo">remover</button></span>`;
+        li.innerHTML = '<span></span><span><small></small> <button type="button" class="btn-link perigo">remover</button></span>';
         li.firstChild.textContent = a.f.name; li.querySelector('small').textContent = a.erro || tam(a.f.size);
-        li.querySelector('button').onclick = () => { arquivos.splice(i, 1); desenhar(); };
+        li.querySelector('button').onclick = () => { arquivos.splice(arquivos.indexOf(a), 1); desenhar(); };
         return li;
       }));
-    }
-    document.getElementById('arquivos').addEventListener('change', (e) => { adicionar(e.target.files); e.target.value = ''; });
-    soltar.addEventListener('dragover', (e) => { e.preventDefault(); soltar.classList.add('sobre'); });
-    soltar.addEventListener('dragleave', () => soltar.classList.remove('sobre'));
-    soltar.addEventListener('drop', (e) => { e.preventDefault(); soltar.classList.remove('sobre'); adicionar(e.dataTransfer.files); });
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const msg = document.getElementById('msg');
-      const faltando = [...form.querySelectorAll('[required]')].filter((c) => c.type === 'checkbox' ? !c.checked : !c.value.trim());
-      if (!form.querySelector('[name=tipos]:checked')) faltando.push(document.getElementById('tipos'));
-      if (faltando.length) { msg.innerHTML = '<div class="alerta erro">Preencha os campos obrigatórios marcados com *.</div>'; faltando[0].scrollIntoView({ block: 'center' }); return; }
-      if (arquivos.some((a) => a.erro)) { msg.innerHTML = '<div class="alerta erro">Remova os arquivos marcados em vermelho antes de enviar.</div>'; return; }
-      document.getElementById('conteudo').innerHTML = `<div class="bloco-form sp-ok"><div class="icone">✓</div><h1>Solicitação enviada!</h1>
-        <p class="ajuda">Recebemos as suas informações. Nossa equipe vai analisar e entrar em contato em breve pelo e-mail ou telefone informado.</p>
-        <p class="ajuda">Protocolo: <strong>SP-2026-0001</strong></p></div>`;
-      scrollTo(0, 0);
+      entrada.addEventListener('change', () => { adicionar(entrada.files); entrada.value = ''; });
+      zona.addEventListener('dragover', (e) => { e.preventDefault(); zona.classList.add('sobre'); });
+      zona.addEventListener('dragleave', () => zona.classList.remove('sobre'));
+      zona.addEventListener('drop', (e) => { e.preventDefault(); zona.classList.remove('sobre'); adicionar(e.dataTransfer.files); });
     });
+
+    // nome seguro para o arquivo guardado (sem acentos, espaços ou símbolos)
+    const nomeSeguro = (n, i) => {
+      const ext = n.split('.').pop().toLowerCase();
+      const base = n.slice(0, -(ext.length + 1)).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'arquivo';
+      return `${String(i + 1).padStart(2, '0')}-${base}.${ext}`;
+    };
+    const erro = (t) => { msg.innerHTML = ''; const d = document.createElement('div'); d.className = 'alerta erro'; d.textContent = t; msg.append(d); };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const faltando = [...form.querySelectorAll('[required]')].filter((c) => c.type === 'checkbox' ? !c.checked : !c.value.trim());
+      if (faltando.length) { erro('Preencha os campos obrigatórios marcados com *.'); faltando[0].focus(); faltando[0].scrollIntoView({ block: 'center' }); return; }
+      const email = form.contratante_email;
+      if (!email.checkValidity()) { erro('Confira o e-mail informado.'); email.focus(); return; }
+      const link = form.local_link_mapa;
+      if (link.value.trim() && !/^https?:\/\//i.test(link.value.trim())) { erro('O link da localização deve começar com https://'); link.focus(); return; }
+      if (arquivos.some((a) => a.erro)) { erro('Remova os arquivos marcados em vermelho antes de enviar.'); return; }
+
+      const dados = Object.fromEntries(new FormData(form));
+      dados.aceite_lgpd = form.aceite_lgpd.checked;
+      btn.disabled = true; btn.textContent = 'Enviando…'; msg.innerHTML = '';
+      try {
+        const { data: r, error } = await sb.rpc('enviar_solicitacao_proposta', { p: dados });
+        if (error) throw error;
+        if (r.erro) { erro(r.erro); return; }
+        const falhas = [];
+        const prog = document.createElement('p'); prog.className = 'progresso'; msg.append(prog);
+        for (const [i, a] of arquivos.entries()) {
+          prog.textContent = `Enviando arquivo ${i + 1} de ${arquivos.length}…`;
+          const { error: eArq } = await sb.storage.from(BALDE).upload(`${r.pasta}/${a.grupo}/${nomeSeguro(a.f.name, i)}`, a.f, { upsert: false, contentType: a.f.type || 'application/octet-stream' });
+          if (eArq) falhas.push(a.f.name);
+        }
+        concluir(r.protocolo, falhas);
+      } catch (err) {
+        console.error(err);
+        erro('Não foi possível enviar agora. Verifique sua conexão com a internet e tente novamente.');
+      } finally { btn.disabled = false; btn.textContent = 'Enviar solicitação'; }
+    });
+
+    function concluir(protocolo, falhas) {
+      const c = document.getElementById('conteudo');
+      c.innerHTML = `<div class="bloco-form sp-ok"><div class="icone">✓</div><h1>Solicitação enviada!</h1>
+        <p class="ajuda">Recebemos as suas informações. Nossa equipe vai analisar e entrar em contato em breve pelo e-mail ou telefone informado.</p>
+        <p class="ajuda">Protocolo: <strong id="prot"></strong></p><div id="falhas"></div></div>`;
+      c.querySelector('#prot').textContent = protocolo;
+      if (falhas.length) {
+        const d = document.createElement('div'); d.className = 'alerta erro'; d.style.textAlign = 'left';
+        d.textContent = 'Seus dados foram recebidos, mas estes arquivos não puderam ser enviados: ' + falhas.join(', ') + '. Por favor, envie-os por e-mail informando o protocolo.';
+        c.querySelector('#falhas').append(d);
+      }
+      scrollTo(0, 0);
+    }
   </script>
 </body>
 </html>

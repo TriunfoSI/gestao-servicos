@@ -58,6 +58,7 @@ const CORES = {
   'Previsto': 'amarelo', 'Não iniciada': 'cinza', 'Alta': 'vermelho', 'Média': 'amarelo', 'Baixa': 'cinza',
   'Atendido': 'verde', 'Atendido fora do prazo': 'laranja', 'Apoio técnico': 'roxo', 'Respondida': 'roxo', 'Retorno recebido': 'laranja', 'Respondida fora do prazo': 'laranja', 'Subtarefas': 'azul', 'Subtarefas concluídas': 'amarelo', 'Processo': 'azul', 'Documento': 'roxo', 'ART': 'verde', 'Docs. Contratuais': 'laranja',
   'Pendente': 'amarelo', 'Ativa': 'verde', 'Emitida': 'verde', 'Baixada': 'cinza',
+  'Nova': 'laranja', 'Em análise': 'azul', 'Proposta enviada': 'verde', 'Arquivada': 'cinza',
   'Concluída fora do prazo': 'laranja', 'Vencida': 'vermelho',
   'Triunfo': 'azul', 'Cliente': 'laranja', 'Preliminar': 'roxo',
 };

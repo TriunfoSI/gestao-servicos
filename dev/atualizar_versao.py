@@ -2,7 +2,7 @@
 """Atualiza a versão dos arquivos do site (evita que o navegador use arquivos antigos).
 
 Rode antes de publicar: python3 dev/atualizar_versao.py
-Reescreve o mapa de módulos (importmap) e o ?v= do CSS em docs/index.html e docs/cliente.html.
+Reescreve o mapa de módulos (importmap) e o ?v= do CSS em docs/index.html, docs/cliente.html e docs/proposta.html.
 """
 import pathlib, re, datetime
 
@@ -12,7 +12,7 @@ modulos = ['config.js'] + sorted(str(p.relative_to(DOCS)) for p in (DOCS / 'js')
 mapa = ',\n'.join(f'      "./{m}": "./{m}?v={V}"' for m in modulos)
 bloco = f'<script type="importmap">\n  {{\n    "imports": {{\n{mapa}\n    }}\n  }}\n  </script>'
 
-for nome in ['index.html', 'cliente.html']:
+for nome in ['index.html', 'cliente.html', 'proposta.html']:
     f = DOCS / nome
     s = f.read_text()
     s = re.sub(r'<script type="importmap">.*?</script>', bloco, s, flags=re.S) if 'importmap' in s \
