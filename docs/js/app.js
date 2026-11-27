@@ -10,6 +10,7 @@ import { paginaClientes, paginaCliente } from './paginas/clientes.js';
 import { paginaCadastros } from './paginas/cadastros.js';
 import { paginaFornecedores, paginaFornecedor } from './paginas/fornecedores.js';
 import { paginaBusca } from './paginas/busca.js';
+import { paginaPropostas } from './paginas/propostas.js';
 
 const raiz = document.getElementById('app');
 
@@ -25,6 +26,7 @@ const ROTAS = [
   [/^#\/clientes\/(\d+)$/, paginaCliente],
   [/^#\/fornecedores$/, paginaFornecedores],
   [/^#\/fornecedores\/(\d+)$/, paginaFornecedor],
+  [/^#\/propostas$/, paginaPropostas],
   [/^#\/busca$/, paginaBusca],
   [/^#\/cadastros$/, paginaCadastros, eGestor],
 ];
@@ -32,7 +34,7 @@ const ROTAS = [
 function menu() {
   const itens = [
     ['#/', 'Início'], ['#/os', 'Ordens de serviço'], ['#/cronograma', 'Cronograma'], ['#/prazos', 'Prazos'], ['#/tarefas', 'Tarefas'],
-    eFinanceiro() && ['#/financeiro', 'Financeiro'], ['#/clientes', 'Clientes'], ['#/fornecedores', 'Fornecedores'],
+    eFinanceiro() && ['#/financeiro', 'Financeiro'], ['#/propostas', 'Propostas'], ['#/clientes', 'Clientes'], ['#/fornecedores', 'Fornecedores'],
     eGestor() && ['#/cadastros', 'Cadastros'],
   ].filter(Boolean);
   const nav = h('nav', { class: 'menu', id: 'menu' }, itens.map(([href, txt]) => h('a', { href }, txt)));

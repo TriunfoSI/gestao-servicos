@@ -298,3 +298,5 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
 .retorno-aviso ul { margin: .2rem 0; padding-left: 1.2rem; flex-basis: 100%; }
 .retorno-aviso small { flex-basis: 100%; }
 .tabela-tarefas tr.retorno td { background: var(--laranja-f); }
+.grupo-arquivos { margin: .25rem 0 .6rem; }
+.grupo-arquivos ul { margin: .25rem 0 0; padding-left: 1.2rem; }

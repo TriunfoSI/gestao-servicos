@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Solicitação de proposta | Triunfo Engenharia Ambiental</title>
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="apple-touch-icon" href="img/icone-180.png">
+  <script type="importmap">
+  {
+    "imports": {
+      "./config.js": "./config.js?v=202611270041",
+      "./js/app.js": "./js/app.js?v=202611270041",
+      "./js/base.js": "./js/base.js?v=202611270041",
+      "./js/paginas/busca.js": "./js/paginas/busca.js?v=202611270041",
+      "./js/paginas/cadastros.js": "./js/paginas/cadastros.js?v=202611270041",
+      "./js/paginas/clientes.js": "./js/paginas/clientes.js?v=202611270041",
+      "./js/paginas/cronograma.js": "./js/paginas/cronograma.js?v=202611270041",
+      "./js/paginas/financeiro.js": "./js/paginas/financeiro.js?v=202611270041",
+      "./js/paginas/fornecedores.js": "./js/paginas/fornecedores.js?v=202611270041",
+      "./js/paginas/os.js": "./js/paginas/os.js?v=202611270041",
+      "./js/paginas/painel.js": "./js/paginas/painel.js?v=202611270041",
+      "./js/paginas/prazos.js": "./js/paginas/prazos.js?v=202611270041",
+      "./js/paginas/propostas.js": "./js/paginas/propostas.js?v=202611270041",
+      "./js/paginas/tarefas.js": "./js/paginas/tarefas.js?v=202611270041"
+    }
+  }
+  </script>
+  <link rel="stylesheet" href="css/estilo.css?v=202611270041">
+  <style>
+    body { background: var(--fundo); }
+    .faixa { background: var(--marca); height: 6px; }
+    .sp { max-width: 820px; margin: 0 auto; padding: 1.5rem 1rem 2rem; }
+    .sp-topo { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; padding-bottom: 1rem; border-bottom: 1px solid var(--linha); margin-bottom: 1.25rem; }
+    .sp-topo .marca-logo { height: 52px; }
+    .sp-topo .sp-tit { border-left: 1px solid var(--linha); padding-left: .9rem; color: var(--marca); font-weight: 700; line-height: 1.25; }
+    .sp-topo .sp-tit small { display: block; font-weight: 400; color: var(--suave); font-size: .82rem; }
+    .sp-intro h1 { font-size: 1.55rem; margin: 0 0 .35rem; }
+    .sp-intro p { color: var(--suave); margin: 0 0 1.25rem; }
+    .passos { display: flex; gap: .4rem; margin: 0 0 1.25rem; padding: 0; list-style: none; flex-wrap: wrap; }
+    .passos li { font-size: .8rem; color: var(--suave); background: var(--papel); border: 1px solid var(--linha); border-radius: 99px; padding: .25rem .7rem; }
+    .passos li b { color: var(--marca); margin-right: .25rem; }
+    .bloco-form { background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio); box-shadow: var(--sombra); padding: 1.25rem 1.25rem 1.4rem; margin-bottom: 1rem; }
+    .bloco-form h2 { display: flex; align-items: center; gap: .6rem; font-size: 1.05rem; margin-bottom: 1rem; color: var(--texto); }
+    .bloco-form h2 .num { width: 1.7rem; height: 1.7rem; border-radius: 50%; background: var(--marca-clara); color: var(--marca); display: grid; place-items: center; font-size: .85rem; }
+    .campo > span .obr { color: var(--vermelho); margin-left: .15rem; }
+    .opcoes { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem 1rem; }
+    .opcoes label { display: flex; align-items: center; gap: .5rem; font-size: .92rem; color: var(--texto); border: 1px solid var(--linha); border-radius: 8px; padding: .55rem .7rem; cursor: pointer; }
+    .opcoes label:has(input:checked) { border-color: var(--marca); background: var(--marca-clara); }
+    .opcoes input { width: 1rem; height: 1rem; margin: 0; accent-color: var(--marca); }
+    .linha-radio { display: flex; gap: 1.25rem; padding-top: .3rem; }
+    .linha-radio label { display: flex; align-items: center; gap: .35rem; color: var(--texto); font-weight: 400; }
+    .linha-radio input { width: auto; accent-color: var(--marca); }
+    .soltar { display: block; border: 2px dashed #b9c9c2; border-radius: var(--raio); padding: 1.4rem 1rem; text-align: center; background: #fafcfb; cursor: pointer; }
+    .soltar:hover, .soltar.sobre { border-color: var(--marca); background: var(--marca-clara); }
+    .soltar strong { color: var(--marca); }
+    .soltar p { margin: .3rem 0 0; color: var(--suave); font-size: .85rem; }
+    .soltar input { display: none; }
+    .grupo-arq { margin-top: 1.1rem; }
+    .grupo-arq h3 { font-size: .92rem; margin: 0 0 .15rem; }
+    .grupo-arq h3 small { font-weight: 400; color: var(--suave); }
+    .grupo-arq .ajuda { margin: 0 0 .5rem; }
+    .soltar { padding: 1rem; }
+    .progresso { font-size: .88rem; color: var(--suave); margin: .5rem 0; text-align: right; }
+    .lista-arq { list-style: none; padding: 0; margin: .75rem 0 0; }
+    .lista-arq li { display: flex; justify-content: space-between; align-items: center; gap: .5rem; padding: .45rem .7rem; border: 1px solid var(--linha); border-radius: 8px; margin-bottom: .35rem; font-size: .9rem; }
+    .lista-arq li small { color: var(--suave); white-space: nowrap; }
+    .lista-arq li.erro { border-color: #f1c4bf; background: var(--vermelho-f); color: var(--vermelho); }
+    .aceite { display: flex; gap: .6rem; align-items: flex-start; font-size: .88rem; color: var(--suave); margin: .25rem 0 1rem; }
+    .aceite input { width: 1.1rem; height: 1.1rem; margin-top: .15rem; accent-color: var(--marca); flex: none; }
+    .enviar { display: flex; justify-content: flex-end; }
+    .enviar .btn { padding: .75rem 1.6rem; font-size: 1rem; }
+    .sp-rodape { text-align: center; color: var(--suave); font-size: .8rem; margin-top: 2rem; }
+    .sp-ok { text-align: center; padding: 2.5rem 1rem; }
+    .sp-ok .icone { width: 3.2rem; height: 3.2rem; border-radius: 50%; background: var(--verde-f); color: var(--verde); display: grid; place-items: center; font-size: 1.6rem; margin: 0 auto 1rem; }
+    .isca { position: absolute; left: -9999px; }
+    @media (max-width: 640px) {
+      .opcoes { grid-template-columns: 1fr; }
+      .sp-topo .sp-tit { border-left: 0; padding-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="faixa"></div>
+  <main class="sp">
+    <header class="sp-topo">
+      <img class="marca-logo" src="img/logo-triunfo-verde.png" alt="Triunfo Engenharia Ambiental">
+      <div class="sp-tit">Solicitação de proposta<small>Formulário para novos serviços</small></div>
+    </header>
+
+    <div id="conteudo">
+      <section class="sp-intro">
+        <h1>Conte-nos sobre o seu projeto</h1>
+        <p>Preencha as informações abaixo para que nossa equipe técnica avalie a sua necessidade e prepare uma proposta. Os campos marcados com <span style="color:var(--vermelho)">*</span> são obrigatórios. Leva poucos minutos.</p>
+        <ol class="passos"><li><b>1</b>Contratante</li><li><b>2</b>Local</li><li><b>3</b>Serviço</li><li><b>4</b>Documentos</li></ol>
+      </section>
+
+      <form id="form" novalidate>
+        <input class="isca" type="text" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+        <section class="bloco-form">
+          <h2><span class="num">1</span>Dados do contratante</h2>
+          <div class="grade-form">
+            <label class="campo largo"><span>Nome / Razão social<b class="obr">*</b></span><input name="contratante_nome" required maxlength="200" autocomplete="organization"></label>
+            <label class="campo largo"><span>Endereço<b class="obr">*</b></span><input name="contratante_endereco" required maxlength="300" autocomplete="street-address"></label>
+            <label class="campo"><span>CPF / CNPJ<b class="obr">*</b></span><input name="contratante_cpf_cnpj" required maxlength="20" inputmode="numeric"></label>
+            <label class="campo"><span>E-mail<b class="obr">*</b></span><input name="contratante_email" type="email" required maxlength="150" autocomplete="email"></label>
+            <label class="campo"><span>Telefone / Celular<b class="obr">*</b></span><input name="contratante_telefone" type="tel" required maxlength="30" autocomplete="tel" placeholder="(13) 99999-9999"></label>
+          </div>
+        </section>
+
+        <section class="bloco-form">
+          <h2><span class="num">2</span>Dados do local do serviço</h2>
+          <div class="grade-form">
+            <label class="campo largo"><span>Denominação<b class="obr">*</b></span><input name="local_denominacao" required maxlength="200" placeholder="Nome do empreendimento, imóvel ou área"></label>
+            <label class="campo largo"><span>Endereço completo<b class="obr">*</b></span><input name="local_endereco" required maxlength="300" placeholder="Rua, número, bairro, município / UF"></label>
+            <label class="campo largo"><span>Link da localização no Google Maps</span><input name="local_link_mapa" type="url" maxlength="500" placeholder="https://maps.app.goo.gl/..."><small>No Google Maps, marque o local, toque em "Compartilhar" e cole o link aqui.</small></label>
+          </div>
+        </section>
+
+        <section class="bloco-form">
+          <h2><span class="num">3</span>Serviço a ser executado</h2>
+          <div class="grade-form">
+            <label class="campo largo"><span>Descreva brevemente a sua solicitação<b class="obr">*</b></span><textarea name="descricao" rows="5" required maxlength="5000" placeholder="O que precisa ser feito e o que motivou a procura (exigência de órgão, auto de infração, edital, licença, obra, venda do imóvel...)."></textarea></label>
+          </div>
+          <div class="grupo-arq" data-grupo="demanda">
+            <h3>Documentação que gerou a demanda <small>(se houver)</small></h3>
+            <p class="ajuda">Ofício, Auto de Infração, Edital, licença, comunique-se ou outros.</p>
+          </div>
+        </section>
+
+        <section class="bloco-form">
+          <h2><span class="num">4</span>Documentos da área <small style="font-weight:400;color:var(--suave);font-size:.85rem">(envie o que tiver disponível)</small></h2>
+          <div class="grupo-arq" data-grupo="delimitacao">
+            <h3>Delimitação da área</h3>
+            <p class="ajuda">Arquivo KMZ/KML, mapa ou DWG.</p>
+          </div>
+          <div class="grupo-arq" data-grupo="area">
+            <h3>Matrícula ou outro documento da área</h3>
+          </div>
+          <p class="ajuda" style="margin-bottom:0">Até 20 MB por arquivo. Formatos aceitos: PDF, imagens, Word, Excel, DWG/DXF, KML/KMZ, ZIP/RAR.</p>
+        </section>
+
+        <label class="aceite"><input type="checkbox" name="aceite_lgpd" required> <span>Autorizo a Triunfo Engenharia Ambiental a usar estas informações apenas para avaliar a minha solicitação e entrar em contato comigo, conforme a Lei Geral de Proteção de Dados (LGPD).<b class="obr" style="color:var(--vermelho)">*</b></span></label>
+        <div id="msg"></div>
+        <div class="enviar"><button class="btn primario" type="submit" id="btn-enviar">Enviar solicitação</button></div>
+      </form>
+    </div>
+
+    <footer class="sp-rodape">Triunfo Engenharia Ambiental · Seus dados são tratados com sigilo.</footer>
+  </main>
+
+  <script src="vendor/supabase-2.118.0.js"></script>
+  <script type="module">
+    import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+    const BALDE = 'solicitacoes-proposta';
+    const EXT = ['pdf','jpg','jpeg','png','doc','docx','xls','xlsx','dwg','dxf','kml','kmz','zip','rar'];
+    const MAX_MB = 20, MAX_TOTAL = 30;
+    const form = document.getElementById('form');
+    const msg = document.getElementById('msg');
+    const btn = document.getElementById('btn-enviar');
+    const arquivos = [];   // { f, grupo, erro }
+    const tam = (b) => b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.ceil(b / 1024) + ' KB';
+
+    // cria uma área "clique ou arraste" para cada grupo de documentos
+    document.querySelectorAll('.grupo-arq').forEach((g) => {
+      const grupo = g.dataset.grupo;
+      const zona = document.createElement('label');
+      zona.className = 'soltar';
+      zona.innerHTML = '<input type="file" multiple accept="' + EXT.map((e) => '.' + e).join(',') + '"><strong>Clique para escolher</strong> ou arraste os arquivos aqui';
+      const lista = document.createElement('ul'); lista.className = 'lista-arq';
+      g.append(zona, lista);
+      const entrada = zona.querySelector('input');
+      const adicionar = (fs) => {
+        for (const f of fs) {
+          const ext = f.name.split('.').pop().toLowerCase();
+          const erro = !EXT.includes(ext) ? 'formato não aceito' : f.size > MAX_MB * 1048576 ? `maior que ${MAX_MB} MB`
+            : arquivos.filter((a) => !a.erro).length >= MAX_TOTAL ? `limite de ${MAX_TOTAL} arquivos` : null;
+          arquivos.push({ f, grupo, erro });
+        }
+        desenhar();
+      };
+      const desenhar = () => lista.replaceChildren(...arquivos.filter((a) => a.grupo === grupo).map((a) => {
+        const li = document.createElement('li'); if (a.erro) li.className = 'erro';
+        li.innerHTML = '<span></span><span><small></small> <button type="button" class="btn-link perigo">remover</button></span>';
+        li.firstChild.textContent = a.f.name; li.querySelector('small').textContent = a.erro || tam(a.f.size);
+        li.querySelector('button').onclick = () => { arquivos.splice(arquivos.indexOf(a), 1); desenhar(); };
+        return li;
+      }));
+      entrada.addEventListener('change', () => { adicionar(entrada.files); entrada.value = ''; });
+      zona.addEventListener('dragover', (e) => { e.preventDefault(); zona.classList.add('sobre'); });
+      zona.addEventListener('dragleave', () => zona.classList.remove('sobre'));
+      zona.addEventListener('drop', (e) => { e.preventDefault(); zona.classList.remove('sobre'); adicionar(e.dataTransfer.files); });
+    });
+
+    // nome seguro para o arquivo guardado (sem acentos, espaços ou símbolos)
+    const nomeSeguro = (n, i) => {
+      const ext = n.split('.').pop().toLowerCase();
+      const base = n.slice(0, -(ext.length + 1)).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'arquivo';
+      return `${String(i + 1).padStart(2, '0')}-${base}.${ext}`;
+    };
+    const erro = (t) => { msg.innerHTML = ''; const d = document.createElement('div'); d.className = 'alerta erro'; d.textContent = t; msg.append(d); };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const faltando = [...form.querySelectorAll('[required]')].filter((c) => c.type === 'checkbox' ? !c.checked : !c.value.trim());
+      if (faltando.length) { erro('Preencha os campos obrigatórios marcados com *.'); faltando[0].focus(); faltando[0].scrollIntoView({ block: 'center' }); return; }
+      const email = form.contratante_email;
+      if (!email.checkValidity()) { erro('Confira o e-mail informado.'); email.focus(); return; }
+      const link = form.local_link_mapa;
+      if (link.value.trim() && !/^https?:\/\//i.test(link.value.trim())) { erro('O link da localização deve começar com https://'); link.focus(); return; }
+      if (arquivos.some((a) => a.erro)) { erro('Remova os arquivos marcados em vermelho antes de enviar.'); return; }
+
+      const dados = Object.fromEntries(new FormData(form));
+      dados.aceite_lgpd = form.aceite_lgpd.checked;
+      btn.disabled = true; btn.textContent = 'Enviando…'; msg.innerHTML = '';
+      try {
+        const { data: r, error } = await sb.rpc('enviar_solicitacao_proposta', { p: dados });
+        if (error) throw error;
+        if (r.erro) { erro(r.erro); return; }
+        const falhas = [];
+        const prog = document.createElement('p'); prog.className = 'progresso'; msg.append(prog);
+        for (const [i, a] of arquivos.entries()) {
+          prog.textContent = `Enviando arquivo ${i + 1} de ${arquivos.length}…`;
+          const { error: eArq } = await sb.storage.from(BALDE).upload(`${r.pasta}/${a.grupo}/${nomeSeguro(a.f.name, i)}`, a.f, { upsert: false, contentType: a.f.type || 'application/octet-stream' });
+          if (eArq) falhas.push(a.f.name);
+        }
+        concluir(r.protocolo, falhas);
+      } catch (err) {
+        console.error(err);
+        erro('Não foi possível enviar agora. Verifique sua conexão com a internet e tente novamente.');
+      } finally { btn.disabled = false; btn.textContent = 'Enviar solicitação'; }
+    });
+
+    function concluir(protocolo, falhas) {
+      const c = document.getElementById('conteudo');
+      c.innerHTML = `<div class="bloco-form sp-ok"><div class="icone">✓</div><h1>Solicitação enviada!</h1>
+        <p class="ajuda">Recebemos as suas informações. Nossa equipe vai analisar e entrar em contato em breve pelo e-mail ou telefone informado.</p>
+        <p class="ajuda">Protocolo: <strong id="prot"></strong></p><div id="falhas"></div></div>`;
+      c.querySelector('#prot').textContent = protocolo;
+      if (falhas.length) {
+        const d = document.createElement('div'); d.className = 'alerta erro'; d.style.textAlign = 'left';
+        d.textContent = 'Seus dados foram recebidos, mas estes arquivos não puderam ser enviados: ' + falhas.join(', ') + '. Por favor, envie-os por e-mail informando o protocolo.';
+        c.querySelector('#falhas').append(d);
+      }
+      scrollTo(0, 0);
+    }
+  </script>
+</body>
+</html>
