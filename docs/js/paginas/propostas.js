@@ -78,6 +78,7 @@ async function abrirSolicitacao(s, depois) {
 }
 
 export async function paginaPropostas(el) {
+  window.dispatchEvent(new Event('propostas-alteradas'));
   const todas = await q(sb.from('solicitacao_proposta').select('*').order('criado_em', { ascending: false }));
   const filtro = h('select', {}, h('option', { value: 'abertas' }, 'Em aberto (Nova e Em análise)'), h('option', { value: '' }, 'Todas'),
     SITUACOES.map((t) => h('option', { value: t }, t)));
