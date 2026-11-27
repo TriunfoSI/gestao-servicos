@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Solicitação de proposta | Triunfo Engenharia Ambiental</title>
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="apple-touch-icon" href="img/icone-180.png">
+  <link rel="stylesheet" href="css/estilo.css">
+  <style>
+    body { background: var(--fundo); }
+    .faixa { background: var(--marca); height: 6px; }
+    .sp { max-width: 820px; margin: 0 auto; padding: 1.5rem 1rem 2rem; }
+    .sp-topo { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; padding-bottom: 1rem; border-bottom: 1px solid var(--linha); margin-bottom: 1.25rem; }
+    .sp-topo .marca-logo { height: 52px; }
+    .sp-topo .sp-tit { border-left: 1px solid var(--linha); padding-left: .9rem; color: var(--marca); font-weight: 700; line-height: 1.25; }
+    .sp-topo .sp-tit small { display: block; font-weight: 400; color: var(--suave); font-size: .82rem; }
+    .sp-intro h1 { font-size: 1.55rem; margin: 0 0 .35rem; }
+    .sp-intro p { color: var(--suave); margin: 0 0 1.25rem; }
+    .passos { display: flex; gap: .4rem; margin: 0 0 1.25rem; padding: 0; list-style: none; flex-wrap: wrap; }
+    .passos li { font-size: .8rem; color: var(--suave); background: var(--papel); border: 1px solid var(--linha); border-radius: 99px; padding: .25rem .7rem; }
+    .passos li b { color: var(--marca); margin-right: .25rem; }
+    .bloco-form { background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio); box-shadow: var(--sombra); padding: 1.25rem 1.25rem 1.4rem; margin-bottom: 1rem; }
+    .bloco-form h2 { display: flex; align-items: center; gap: .6rem; font-size: 1.05rem; margin-bottom: 1rem; color: var(--texto); }
+    .bloco-form h2 .num { width: 1.7rem; height: 1.7rem; border-radius: 50%; background: var(--marca-clara); color: var(--marca); display: grid; place-items: center; font-size: .85rem; }
+    .campo > span .obr { color: var(--vermelho); margin-left: .15rem; }
+    .opcoes { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem 1rem; }
+    .opcoes label { display: flex; align-items: center; gap: .5rem; font-size: .92rem; color: var(--texto); border: 1px solid var(--linha); border-radius: 8px; padding: .55rem .7rem; cursor: pointer; }
+    .opcoes label:has(input:checked) { border-color: var(--marca); background: var(--marca-clara); }
+    .opcoes input { width: 1rem; height: 1rem; margin: 0; accent-color: var(--marca); }
+    .linha-radio { display: flex; gap: 1.25rem; padding-top: .3rem; }
+    .linha-radio label { display: flex; align-items: center; gap: .35rem; color: var(--texto); font-weight: 400; }
+    .linha-radio input { width: auto; accent-color: var(--marca); }
+    .soltar { display: block; border: 2px dashed #b9c9c2; border-radius: var(--raio); padding: 1.4rem 1rem; text-align: center; background: #fafcfb; cursor: pointer; }
+    .soltar:hover, .soltar.sobre { border-color: var(--marca); background: var(--marca-clara); }
+    .soltar strong { color: var(--marca); }
+    .soltar p { margin: .3rem 0 0; color: var(--suave); font-size: .85rem; }
+    .soltar input { display: none; }
+    .lista-arq { list-style: none; padding: 0; margin: .75rem 0 0; }
+    .lista-arq li { display: flex; justify-content: space-between; align-items: center; gap: .5rem; padding: .45rem .7rem; border: 1px solid var(--linha); border-radius: 8px; margin-bottom: .35rem; font-size: .9rem; }
+    .lista-arq li small { color: var(--suave); white-space: nowrap; }
+    .lista-arq li.erro { border-color: #f1c4bf; background: var(--vermelho-f); color: var(--vermelho); }
+    .aceite { display: flex; gap: .6rem; align-items: flex-start; font-size: .88rem; color: var(--suave); margin: .25rem 0 1rem; }
+    .aceite input { width: 1.1rem; height: 1.1rem; margin-top: .15rem; accent-color: var(--marca); flex: none; }
+    .enviar { display: flex; justify-content: flex-end; }
+    .enviar .btn { padding: .75rem 1.6rem; font-size: 1rem; }
+    .sp-rodape { text-align: center; color: var(--suave); font-size: .8rem; margin-top: 2rem; }
+    .sp-ok { text-align: center; padding: 2.5rem 1rem; }
+    .sp-ok .icone { width: 3.2rem; height: 3.2rem; border-radius: 50%; background: var(--verde-f); color: var(--verde); display: grid; place-items: center; font-size: 1.6rem; margin: 0 auto 1rem; }
+    .isca { position: absolute; left: -9999px; }
+    @media (max-width: 640px) {
+      .opcoes { grid-template-columns: 1fr; }
+      .sp-topo .sp-tit { border-left: 0; padding-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="faixa"></div>
+  <main class="sp">
+    <header class="sp-topo">
+      <img class="marca-logo" src="img/logo-triunfo-verde.png" alt="Triunfo Engenharia Ambiental">
+      <div class="sp-tit">Solicitação de proposta<small>Formulário para novos serviços</small></div>
+    </header>
+
+    <div id="conteudo">
+      <section class="sp-intro">
+        <h1>Conte-nos sobre o seu projeto</h1>
+        <p>Preencha as informações abaixo para que nossa equipe técnica avalie a sua necessidade e prepare uma proposta. Os campos marcados com <span style="color:var(--vermelho)">*</span> são obrigatórios. Leva cerca de 5 minutos.</p>
+        <ol class="passos"><li><b>1</b>Seus dados</li><li><b>2</b>Local</li><li><b>3</b>Serviço</li><li><b>4</b>Arquivos</li></ol>
+      </section>
+
+      <form id="form" novalidate>
+        <input class="isca" type="text" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+        <section class="bloco-form">
+          <h2><span class="num">1</span>Seus dados</h2>
+          <div class="grade-form">
+            <label class="campo"><span>Nome completo<b class="obr">*</b></span><input name="nome" required maxlength="150" autocomplete="name"></label>
+            <label class="campo"><span>Empresa ou instituição</span><input name="empresa" maxlength="200" autocomplete="organization"><small>Deixe em branco se for pessoa física.</small></label>
+            <label class="campo"><span>CPF ou CNPJ</span><input name="cpf_cnpj" maxlength="20" inputmode="numeric"></label>
+            <label class="campo"><span>Cargo ou função</span><input name="cargo" maxlength="100"></label>
+            <label class="campo"><span>E-mail<b class="obr">*</b></span><input name="email" type="email" required maxlength="150" autocomplete="email"></label>
+            <label class="campo"><span>Telefone / WhatsApp<b class="obr">*</b></span><input name="telefone" type="tel" required maxlength="30" autocomplete="tel" placeholder="(13) 99999-9999"></label>
+          </div>
+        </section>
+
+        <section class="bloco-form">
+          <h2><span class="num">2</span>Local do empreendimento</h2>
+          <div class="grade-form">
+            <label class="campo largo"><span>Nome do empreendimento ou imóvel</span><input name="empreendimento" maxlength="200" placeholder="Ex.: Condomínio Residencial Vista Mar"></label>
+            <label class="campo largo"><span>Endereço</span><input name="endereco" maxlength="250"></label>
+            <label class="campo"><span>Município<b class="obr">*</b></span><input name="municipio" required maxlength="100"></label>
+            <label class="campo"><span>UF</span><select name="uf"><option></option></select></label>
+            <label class="campo"><span>Área aproximada</span><input name="area" maxlength="50" placeholder="Ex.: 2.500 m²"></label>
+            <label class="campo"><span>Matrícula ou inscrição imobiliária</span><input name="matricula" maxlength="100"></label>
+          </div>
+        </section>
+
+        <section class="bloco-form">
+          <h2><span class="num">3</span>Serviço desejado</h2>
+          <div class="campo largo" style="margin-bottom:.9rem"><span>Qual tipo de serviço você precisa?<b class="obr">*</b></span>
+            <div class="opcoes" id="tipos"></div>
+          </div>
+          <div class="grade-form">
+            <label class="campo largo"><span>Descreva sua necessidade<b class="obr">*</b></span><textarea name="descricao" rows="5" required maxlength="5000" placeholder="O que você pretende fazer no local, o que motivou a procura (exigência de órgão, compra do imóvel, notificação...) e outras informações que julgar importantes."></textarea></label>
+            <div class="campo"><span>Já existe processo ou notificação em algum órgão?</span>
+              <div class="linha-radio"><label><input type="radio" name="tem_processo" value="Sim"> Sim</label><label><input type="radio" name="tem_processo" value="Não"> Não</label><label><input type="radio" name="tem_processo" value="Não sei"> Não sei</label></div></div>
+            <label class="campo" id="campo-processo" hidden><span>Órgão e número do processo</span><input name="processo" maxlength="200" placeholder="Ex.: CETESB, processo 12345/2026"></label>
+            <label class="campo"><span>Existe um prazo para o serviço?</span><input name="prazo_desejado" type="date"><small>Informe se houver data limite (exigência de órgão, obra, venda...).</small></label>
+            <label class="campo"><span>Como conheceu a Triunfo?</span><select name="origem"><option></option><option>Indicação</option><option>Já sou cliente</option><option>Internet / redes sociais</option><option>Evento</option><option>Outro</option></select></label>
+          </div>
+        </section>
+
+        <section class="bloco-form">
+          <h2><span class="num">4</span>Arquivos <small style="font-weight:400;color:var(--suave);font-size:.85rem">(opcional)</small></h2>
+          <p class="ajuda" style="margin-top:-.4rem">Envie o que tiver: matrícula, planta, fotos, notificações, licenças anteriores, mapas (KML/KMZ)…</p>
+          <label class="soltar" id="soltar">
+            <input type="file" id="arquivos" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.dwg,.kml,.kmz,.zip">
+            <strong>Clique para escolher</strong> ou arraste os arquivos aqui
+            <p>Até 10 arquivos, de até 20 MB cada. PDF, imagens, Word, Excel, DWG, KML/KMZ ou ZIP.</p>
+          </label>
+          <ul class="lista-arq" id="lista-arq"></ul>
+        </section>
+
+        <label class="aceite"><input type="checkbox" name="aceite" required> <span>Autorizo a Triunfo Engenharia Ambiental a usar estas informações apenas para avaliar a minha solicitação e entrar em contato comigo, conforme a Lei Geral de Proteção de Dados (LGPD).</span></label>
+        <div id="msg"></div>
+        <div class="enviar"><button class="btn primario" type="submit" id="btn-enviar">Enviar solicitação</button></div>
+      </form>
+    </div>
+
+    <footer class="sp-rodape">Triunfo Engenharia Ambiental · Seus dados são tratados com sigilo.</footer>
+  </main>
+
+  <script>
+    // Prévia visual: o envio ainda não grava no banco.
+    const TIPOS = ['Licenciamento ambiental', 'Autorização de supressão de vegetação', 'Laudo ou relatório técnico', 'Regularização ou defesa de auto de infração', 'Outorga de uso de água', 'Outro / não sei informar'];
+    const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
+    const EXT = ['pdf','jpg','jpeg','png','doc','docx','xls','xlsx','dwg','kml','kmz','zip'];
+    const MAX_ARQ = 10, MAX_MB = 20;
+    const form = document.getElementById('form');
+    document.getElementById('tipos').innerHTML = TIPOS.map((t) => `<label><input type="checkbox" name="tipos" value="${t}"> ${t}</label>`).join('');
+    const uf = form.uf; UFS.forEach((u) => uf.add(new Option(u, u, false, u === 'SP')));
+    form.querySelectorAll('[name=tem_processo]').forEach((r) => r.addEventListener('change', () => { document.getElementById('campo-processo').hidden = form.tem_processo.value !== 'Sim'; }));
+
+    let arquivos = [];
+    const lista = document.getElementById('lista-arq'), soltar = document.getElementById('soltar');
+    const tam = (b) => b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.ceil(b / 1024) + ' KB';
+    function adicionar(fs) {
+      for (const f of fs) {
+        const ext = f.name.split('.').pop().toLowerCase();
+        const erro = !EXT.includes(ext) ? 'tipo de arquivo não aceito' : f.size > MAX_MB * 1048576 ? `maior que ${MAX_MB} MB` : arquivos.length >= MAX_ARQ ? `limite de ${MAX_ARQ} arquivos` : null;
+        arquivos.push({ f, erro });
+      }
+      desenhar();
+    }
+    function desenhar() {
+      lista.replaceChildren(...arquivos.map((a, i) => {
+        const li = document.createElement('li'); if (a.erro) li.className = 'erro';
+        li.innerHTML = `<span></span><span><small></small> <button type="button" class="btn-link perigo">remover</button></span>`;
+        li.firstChild.textContent = a.f.name; li.querySelector('small').textContent = a.erro || tam(a.f.size);
+        li.querySelector('button').onclick = () => { arquivos.splice(i, 1); desenhar(); };
+        return li;
+      }));
+    }
+    document.getElementById('arquivos').addEventListener('change', (e) => { adicionar(e.target.files); e.target.value = ''; });
+    soltar.addEventListener('dragover', (e) => { e.preventDefault(); soltar.classList.add('sobre'); });
+    soltar.addEventListener('dragleave', () => soltar.classList.remove('sobre'));
+    soltar.addEventListener('drop', (e) => { e.preventDefault(); soltar.classList.remove('sobre'); adicionar(e.dataTransfer.files); });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('msg');
+      const faltando = [...form.querySelectorAll('[required]')].filter((c) => c.type === 'checkbox' ? !c.checked : !c.value.trim());
+      if (!form.querySelector('[name=tipos]:checked')) faltando.push(document.getElementById('tipos'));
+      if (faltando.length) { msg.innerHTML = '<div class="alerta erro">Preencha os campos obrigatórios marcados com *.</div>'; faltando[0].scrollIntoView({ block: 'center' }); return; }
+      if (arquivos.some((a) => a.erro)) { msg.innerHTML = '<div class="alerta erro">Remova os arquivos marcados em vermelho antes de enviar.</div>'; return; }
+      document.getElementById('conteudo').innerHTML = `<div class="bloco-form sp-ok"><div class="icone">✓</div><h1>Solicitação enviada!</h1>
+        <p class="ajuda">Recebemos as suas informações. Nossa equipe vai analisar e entrar em contato em breve pelo e-mail ou telefone informado.</p>
+        <p class="ajuda">Protocolo: <strong>SP-2026-0001</strong></p></div>`;
+      scrollTo(0, 0);
+    });
+  </script>
+</body>
+</html>
