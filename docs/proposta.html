@@ -10,24 +10,24 @@
   <script type="importmap">
   {
     "imports": {
-      "./config.js": "./config.js?v=202611270041",
-      "./js/app.js": "./js/app.js?v=202611270041",
-      "./js/base.js": "./js/base.js?v=202611270041",
-      "./js/paginas/busca.js": "./js/paginas/busca.js?v=202611270041",
-      "./js/paginas/cadastros.js": "./js/paginas/cadastros.js?v=202611270041",
-      "./js/paginas/clientes.js": "./js/paginas/clientes.js?v=202611270041",
-      "./js/paginas/cronograma.js": "./js/paginas/cronograma.js?v=202611270041",
-      "./js/paginas/financeiro.js": "./js/paginas/financeiro.js?v=202611270041",
-      "./js/paginas/fornecedores.js": "./js/paginas/fornecedores.js?v=202611270041",
-      "./js/paginas/os.js": "./js/paginas/os.js?v=202611270041",
-      "./js/paginas/painel.js": "./js/paginas/painel.js?v=202611270041",
-      "./js/paginas/prazos.js": "./js/paginas/prazos.js?v=202611270041",
-      "./js/paginas/propostas.js": "./js/paginas/propostas.js?v=202611270041",
-      "./js/paginas/tarefas.js": "./js/paginas/tarefas.js?v=202611270041"
+      "./config.js": "./config.js?v=202611270059",
+      "./js/app.js": "./js/app.js?v=202611270059",
+      "./js/base.js": "./js/base.js?v=202611270059",
+      "./js/paginas/busca.js": "./js/paginas/busca.js?v=202611270059",
+      "./js/paginas/cadastros.js": "./js/paginas/cadastros.js?v=202611270059",
+      "./js/paginas/clientes.js": "./js/paginas/clientes.js?v=202611270059",
+      "./js/paginas/cronograma.js": "./js/paginas/cronograma.js?v=202611270059",
+      "./js/paginas/financeiro.js": "./js/paginas/financeiro.js?v=202611270059",
+      "./js/paginas/fornecedores.js": "./js/paginas/fornecedores.js?v=202611270059",
+      "./js/paginas/os.js": "./js/paginas/os.js?v=202611270059",
+      "./js/paginas/painel.js": "./js/paginas/painel.js?v=202611270059",
+      "./js/paginas/prazos.js": "./js/paginas/prazos.js?v=202611270059",
+      "./js/paginas/propostas.js": "./js/paginas/propostas.js?v=202611270059",
+      "./js/paginas/tarefas.js": "./js/paginas/tarefas.js?v=202611270059"
     }
   }
   </script>
-  <link rel="stylesheet" href="css/estilo.css?v=202611270041">
+  <link rel="stylesheet" href="css/estilo.css?v=202611270059">
   <style>
     body { background: var(--fundo); }
     .faixa { background: var(--marca); height: 6px; }
@@ -57,6 +57,9 @@
     .soltar strong { color: var(--marca); }
     .soltar p { margin: .3rem 0 0; color: var(--suave); font-size: .85rem; }
     .soltar input { display: none; }
+    .marcar-mesmo { display: flex; align-items: center; gap: .5rem; font-size: .92rem; margin: -.3rem 0 .9rem; cursor: pointer; }
+    .marcar-mesmo input { width: 1.05rem; height: 1.05rem; margin: 0; accent-color: var(--marca); }
+    #rep-campos[hidden] { display: none; }
     .grupo-arq { margin-top: 1.1rem; }
     .grupo-arq h3 { font-size: .92rem; margin: 0 0 .15rem; }
     .grupo-arq h3 small { font-weight: 400; color: var(--suave); }
@@ -93,7 +96,7 @@
       <section class="sp-intro">
         <h1>Conte-nos sobre o seu projeto</h1>
         <p>Preencha as informações abaixo para que nossa equipe técnica avalie a sua necessidade e prepare uma proposta. Os campos marcados com <span style="color:var(--vermelho)">*</span> são obrigatórios. Leva poucos minutos.</p>
-        <ol class="passos"><li><b>1</b>Contratante</li><li><b>2</b>Local</li><li><b>3</b>Serviço</li><li><b>4</b>Documentos</li></ol>
+        <ol class="passos"><li><b>1</b>Contratante</li><li><b>2</b>Representante</li><li><b>3</b>Local</li><li><b>4</b>Serviço</li><li><b>5</b>Documentos</li></ol>
       </section>
 
       <form id="form" novalidate>
@@ -111,7 +114,18 @@
         </section>
 
         <section class="bloco-form">
-          <h2><span class="num">2</span>Dados do local do serviço</h2>
+          <h2><span class="num">2</span>Dados do representante</h2>
+          <label class="marcar-mesmo"><input type="checkbox" name="representante_mesmo" id="rep-mesmo"> O representante é o próprio contratante</label>
+          <div class="grade-form" id="rep-campos">
+            <label class="campo"><span>Nome<b class="obr">*</b></span><input name="representante_nome" required maxlength="200" autocomplete="name"></label>
+            <label class="campo"><span>Cargo<b class="obr">*</b></span><input name="representante_cargo" required maxlength="150"></label>
+            <label class="campo"><span>Celular<b class="obr">*</b></span><input name="representante_celular" type="tel" required maxlength="30" placeholder="(13) 99999-9999"></label>
+            <label class="campo"><span>E-mail<b class="obr">*</b></span><input name="representante_email" type="email" required maxlength="150"></label>
+          </div>
+        </section>
+
+        <section class="bloco-form">
+          <h2><span class="num">3</span>Dados do local do serviço</h2>
           <div class="grade-form">
             <label class="campo largo"><span>Denominação<b class="obr">*</b></span><input name="local_denominacao" required maxlength="200" placeholder="Nome do empreendimento, imóvel ou área"></label>
             <label class="campo largo"><span>Endereço completo<b class="obr">*</b></span><input name="local_endereco" required maxlength="300" placeholder="Rua, número, bairro, município / UF"></label>
@@ -120,7 +134,7 @@
         </section>
 
         <section class="bloco-form">
-          <h2><span class="num">3</span>Serviço a ser executado</h2>
+          <h2><span class="num">4</span>Serviço a ser executado</h2>
           <div class="grade-form">
             <label class="campo largo"><span>Descreva brevemente a sua solicitação<b class="obr">*</b></span><textarea name="descricao" rows="5" required maxlength="5000" placeholder="O que precisa ser feito e o que motivou a procura (exigência de órgão, auto de infração, edital, licença, obra, venda do imóvel...)."></textarea></label>
           </div>
@@ -131,7 +145,7 @@
         </section>
 
         <section class="bloco-form">
-          <h2><span class="num">4</span>Documentos da área <small style="font-weight:400;color:var(--suave);font-size:.85rem">(envie o que tiver disponível)</small></h2>
+          <h2><span class="num">5</span>Documentos da área <small style="font-weight:400;color:var(--suave);font-size:.85rem">(envie o que tiver disponível)</small></h2>
           <div class="grupo-arq" data-grupo="delimitacao">
             <h3>Delimitação da área</h3>
             <p class="ajuda">Arquivo KMZ/KML, mapa ou DWG.</p>
@@ -162,6 +176,12 @@
     const msg = document.getElementById('msg');
     const btn = document.getElementById('btn-enviar');
     const arquivos = [];   // { f, grupo, erro }
+    // representante: se for o próprio contratante, esconde os campos e deixa de exigi-los
+    const repMesmo = document.getElementById('rep-mesmo'), repCampos = document.getElementById('rep-campos');
+    repMesmo.addEventListener('change', () => {
+      repCampos.hidden = repMesmo.checked;
+      repCampos.querySelectorAll('input').forEach((i) => { i.required = !repMesmo.checked; });
+    });
     const tam = (b) => b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.ceil(b / 1024) + ' KB';
 
     // cria uma área "clique ou arraste" para cada grupo de documentos
@@ -207,14 +227,17 @@
       e.preventDefault();
       const faltando = [...form.querySelectorAll('[required]')].filter((c) => c.type === 'checkbox' ? !c.checked : !c.value.trim());
       if (faltando.length) { erro('Preencha os campos obrigatórios marcados com *.'); faltando[0].focus(); faltando[0].scrollIntoView({ block: 'center' }); return; }
-      const email = form.contratante_email;
-      if (!email.checkValidity()) { erro('Confira o e-mail informado.'); email.focus(); return; }
+      for (const email of [form.contratante_email, form.representante_email]) {
+        if (email.required && !email.checkValidity()) { erro('Confira o e-mail informado.'); email.focus(); return; }
+      }
       const link = form.local_link_mapa;
       if (link.value.trim() && !/^https?:\/\//i.test(link.value.trim())) { erro('O link da localização deve começar com https://'); link.focus(); return; }
       if (arquivos.some((a) => a.erro)) { erro('Remova os arquivos marcados em vermelho antes de enviar.'); return; }
 
       const dados = Object.fromEntries(new FormData(form));
       dados.aceite_lgpd = form.aceite_lgpd.checked;
+      dados.representante_mesmo = repMesmo.checked;
+      if (repMesmo.checked) ['representante_nome', 'representante_cargo', 'representante_celular', 'representante_email'].forEach((k) => delete dados[k]);
       btn.disabled = true; btn.textContent = 'Enviando…'; msg.innerHTML = '';
       try {
         const { data: r, error } = await sb.rpc('enviar_solicitacao_proposta', { p: dados });

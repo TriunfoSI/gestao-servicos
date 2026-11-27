@@ -43,6 +43,10 @@ async function abrirSolicitacao(s, depois) {
     h('h3', {}, 'Contratante'),
     h('dl', { class: 'detalhes' }, linha('Nome / Razão social', s.contratante_nome), linha('Endereço', s.contratante_endereco),
       linha('CPF / CNPJ', s.contratante_cpf_cnpj), linha('E-mail', s.contratante_email), linha('Telefone / Celular', s.contratante_telefone)),
+    h('h3', {}, 'Representante'),
+    s.representante_mesmo ? h('p', {}, 'O próprio contratante.') :
+      h('dl', { class: 'detalhes' }, linha('Nome', s.representante_nome), linha('Cargo', s.representante_cargo),
+        linha('Celular', s.representante_celular), linha('E-mail', s.representante_email)),
     h('h3', {}, 'Local do serviço'),
     h('dl', { class: 'detalhes' }, linha('Denominação', s.local_denominacao), linha('Endereço completo', s.local_endereco),
       s.local_link_mapa ? [h('dt', {}, 'Localização'), h('dd', {}, h('a', { href: s.local_link_mapa, target: '_blank', rel: 'noopener noreferrer' }, 'Abrir no mapa'))] : null),
@@ -84,7 +88,7 @@ export async function paginaPropostas(el) {
   function mostrar() {
     const b = semAcento(busca.value.trim());
     const ls = todas.filter((s) => (filtro.value === 'abertas' ? ['Nova', 'Em análise'].includes(s.situacao) : !filtro.value || s.situacao === filtro.value) &&
-      (!b || semAcento([s.protocolo, s.contratante_nome, s.contratante_cpf_cnpj, s.local_denominacao, s.local_endereco].join(' ')).includes(b)));
+      (!b || semAcento([s.protocolo, s.contratante_nome, s.contratante_cpf_cnpj, s.representante_nome, s.local_denominacao, s.local_endereco].join(' ')).includes(b)));
     limpar(area, h('p', { class: 'contagem' }, `${ls.length} solicitação(ões)`),
       tabela([
         { k: 'protocolo', rotulo: 'Protocolo' },
