@@ -37,7 +37,8 @@ function menu() {
     eFinanceiro() && ['#/financeiro', 'Financeiro'], ['#/propostas', 'Propostas'], ['#/clientes', 'Clientes'], ['#/fornecedores', 'Fornecedores'],
     eGestor() && ['#/cadastros', 'Cadastros'],
   ].filter(Boolean);
-  const nav = h('nav', { class: 'menu', id: 'menu' }, itens.map(([href, txt]) => h('a', { href }, txt)));
+  const nav = h('nav', { class: 'menu', id: 'menu' }, itens.map(([href, txt]) => h('a', { href }, txt,
+    href === '#/propostas' ? h('span', { class: 'contador', id: 'contador-propostas', hidden: true, title: 'Pedidos de proposta novos' }) : null)));
   const termo = h('input', { type: 'search', placeholder: '🔍 Busca geral…', 'aria-label': 'Busca geral' });
   const busca = h('form', { class: 'busca-topo', onsubmit: (e) => {
     e.preventDefault();
@@ -55,6 +56,15 @@ function menu() {
       h('button', { class: 'btn pequeno', onclick: async () => { await sb.auth.signOut(); location.hash = '#/'; iniciar(); } }, 'Sair')));
 }
 
+// número de pedidos de proposta com situação "Nova", ao lado de "Propostas" no menu
+async function atualizarContadorPropostas() {
+  const el = document.getElementById('contador-propostas');
+  if (!el) return;
+  const { count } = await sb.from('solicitacao_proposta').select('id', { count: 'exact', head: true }).eq('situacao', 'Nova');
+  el.textContent = count || '';
+  el.hidden = !count;
+}
+
 async function navegar() {
   const conteudo = document.getElementById('conteudo');
   if (!conteudo) return;
@@ -64,6 +74,7 @@ async function navegar() {
     a.classList.toggle('ativo', alvo === '#/' ? hash === '#/' || hash === '' : hash.startsWith(alvo));
   });
   document.getElementById('menu')?.classList.remove('aberto');
+  atualizarContadorPropostas();
   for (const [re, pagina, permitido] of ROTAS) {
     const m = hash.match(re);
     if (!m) continue;
@@ -154,5 +165,6 @@ async function iniciar() {
 }
 
 window.addEventListener('hashchange', navegar);
+window.addEventListener('propostas-alteradas', atualizarContadorPropostas);
 sb.auth.onAuthStateChange((evento) => { if (evento === 'PASSWORD_RECOVERY') telaNovaSenha(); });
 if (/type=recovery/.test(location.hash)) { /* o Supabase dispara PASSWORD_RECOVERY */ } else iniciar();

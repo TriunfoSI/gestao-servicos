@@ -1,4 +1,4 @@
-import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, fmtReais, perfil, cartao, chaveOS } from '../base.js';
+import { sb, st, h, limpar, q, tabela, etiqueta, fmtData, fmtReais, fmtDataHora, perfil, cartao, chaveOS, eGestor } from '../base.js';
 import { abrirTarefa, etiquetaTarefa, retornoParaMim } from './tarefas.js';
 
 // Situação automática da OS (calculada no banco pela visão v_os_situacao):
@@ -115,6 +115,9 @@ export async function paginaPainel(el) {
   const retornosQ = sb.from('v_tarefa').select('*').eq('solicitante_id', meuId).eq('situacao', 'Respondida').order('respondido_em');
 
   const canceladasQ = sb.from('os').select('id').eq('sit_contrato', 'Cancelado');
+  // pedidos de proposta novos (formulário público): aviso para a coordenação
+  const novasPropostas = eGestor() ? (await sb.from('solicitacao_proposta').select('id,protocolo,contratante_nome,local_denominacao,criado_em')
+    .eq('situacao', 'Nova').order('criado_em', { ascending: false })).data || [] : [];
 
   const [todasOs, prazosTodos, tarefasResp, parcelasTodas, canceladas, retornos] = await Promise.all(
     [q(osQ), q(prazosQ), q(tarefasQ), parcelasQ ? q(parcelasQ) : [], q(canceladasQ), q(retornosQ)]);
@@ -202,8 +205,16 @@ export async function paginaPainel(el) {
       (t.descricao || '').replace(/\s+/g, ' ').slice(0, 90)), t.respondido_por_nome ? ` · respondido por ${t.respondido_por_nome}` : ''))),
     h('small', {}, 'Abra para ler a resposta e concluir o pedido.')) : null;
 
+  // aviso de pedidos de proposta novos
+  const avisoPropostas = novasPropostas.length ? h('div', { class: 'alerta laranja proposta-aviso' },
+    h('strong', {}, novasPropostas.length === 1 ? 'Novo pedido de proposta:' : `${novasPropostas.length} novos pedidos de proposta:`),
+    h('ul', {}, novasPropostas.slice(0, 5).map((s) => h('li', {}, `${s.protocolo} · ${s.contratante_nome}`,
+      s.local_denominacao ? ` · ${s.local_denominacao}` : '', h('small', {}, ` · recebido em ${fmtDataHora(s.criado_em)}`)))),
+    h('a', { href: '#/propostas', class: 'btn pequeno' }, 'Ver pedidos de proposta →')) : null;
+
   limpar(el,
     h('h1', {}, `Olá, ${st.eu.nome.split(' ')[0]}`),
+    avisoPropostas,
     avisoRetorno,
     cartoes,
     h('div', { class: 'tres-quadros' },

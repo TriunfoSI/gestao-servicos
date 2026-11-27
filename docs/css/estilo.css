@@ -300,3 +300,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marca); out
 .tabela-tarefas tr.retorno td { background: var(--laranja-f); }
 .grupo-arquivos { margin: .25rem 0 .6rem; }
 .grupo-arquivos ul { margin: .25rem 0 0; padding-left: 1.2rem; }
+.menu .contador { display: inline-block; min-width: 1.25rem; padding: 0 .35rem; margin-left: .35rem; border-radius: 99px; background: #f59e0b; color: #1d2724; font-size: .75rem; font-weight: 700; line-height: 1.25rem; text-align: center; }
+.menu .contador[hidden] { display: none; }
+.alerta.laranja { background: var(--laranja-f); color: #7a3608; }
+.proposta-aviso ul { margin: .1rem 0; padding-left: 1.2rem; width: 100%; }
+.proposta-aviso small { opacity: .8; }
